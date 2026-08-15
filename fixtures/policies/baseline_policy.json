@@ -1,0 +1,21 @@
+{
+  "policy_id": "MINOR_DANGEROUS_ACT",
+  "version": "1.0",
+  "status": "BASELINE",
+  "title": "未成年人危险行为",
+  "description": "未成年人实施危险行为时判定违规；受控教育场景可以例外。",
+  "applicability": {"content_types": ["VIDEO"]},
+  "required_elements": {"all_of": [
+    {"condition_id": "MINOR_PRESENT", "fact": "MINOR_PRESENT", "op": "EQ", "value": true},
+    {"condition_id": "DANGEROUS_ACT", "fact": "DANGEROUS_ACT", "op": "EQ", "value": true}
+  ]},
+  "exceptions": {"any_of": [
+    {"condition_id": "CONTROLLED_EDUCATION", "all_of": [
+      {"condition_id": "ADULT_SUPERVISION", "fact": "ADULT_SUPERVISION", "op": "EQ", "value": true},
+      {"condition_id": "PROTECTIVE_EQUIPMENT", "fact": "PROTECTIVE_EQUIPMENT", "op": "EQ", "value": true},
+      {"condition_id": "EDUCATIONAL_CONTEXT", "fact": "EDUCATIONAL_CONTEXT", "op": "EQ", "value": true}
+    ]}
+  ]},
+  "decision": "VIOLATION",
+  "content_hash": "sha256:0ab92fd9854a5e1e00c2cb59ef579fb86a4584181be0b2da5cc0d66d69302336"
+}

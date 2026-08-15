@@ -1,0 +1,135 @@
+{
+  "$defs": {
+    "LockedPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "content_hash": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Content Hash",
+          "type": "string"
+        },
+        "policy_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Policy Id",
+          "type": "string"
+        },
+        "version": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "policy_id",
+        "version",
+        "content_hash"
+      ],
+      "title": "LockedPolicy",
+      "type": "object"
+    },
+    "ReplayMetrics": {
+      "additionalProperties": false,
+      "properties": {
+        "baseline_false_negatives": {
+          "minimum": 0,
+          "title": "Baseline False Negatives",
+          "type": "integer"
+        },
+        "baseline_false_positives": {
+          "minimum": 0,
+          "title": "Baseline False Positives",
+          "type": "integer"
+        },
+        "candidate_false_negatives": {
+          "minimum": 0,
+          "title": "Candidate False Negatives",
+          "type": "integer"
+        },
+        "candidate_false_positives": {
+          "minimum": 0,
+          "title": "Candidate False Positives",
+          "type": "integer"
+        },
+        "changed_cases": {
+          "minimum": 0,
+          "title": "Changed Cases",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "baseline_false_positives",
+        "candidate_false_positives",
+        "baseline_false_negatives",
+        "candidate_false_negatives",
+        "changed_cases"
+      ],
+      "title": "ReplayMetrics",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "baseline_policy": {
+      "$ref": "#/$defs/LockedPolicy"
+    },
+    "candidate_policy": {
+      "$ref": "#/$defs/LockedPolicy"
+    },
+    "dataset_manifest_hash": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Dataset Manifest Hash",
+      "type": "string"
+    },
+    "dataset_version": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Dataset Version",
+      "type": "string"
+    },
+    "metrics": {
+      "$ref": "#/$defs/ReplayMetrics"
+    },
+    "proposal_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Proposal Id",
+      "type": "string"
+    },
+    "recommendation": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "INCONCLUSIVE"
+      ],
+      "title": "Recommendation",
+      "type": "string"
+    },
+    "replay_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Replay Id",
+      "type": "string"
+    },
+    "result_summary": {
+      "maxLength": 2000,
+      "minLength": 1,
+      "title": "Result Summary",
+      "type": "string"
+    }
+  },
+  "required": [
+    "replay_id",
+    "proposal_id",
+    "baseline_policy",
+    "candidate_policy",
+    "dataset_version",
+    "dataset_manifest_hash",
+    "metrics",
+    "recommendation",
+    "result_summary"
+  ],
+  "title": "ReplayReport",
+  "type": "object"
+}

@@ -1,0 +1,9 @@
+{
+  "case_id": "CASE-001",
+  "demo_run_id": "DEMO-STAGE1",
+  "content_type": "VIDEO",
+  "content_ref": "fixture://case/CASE-001/video",
+  "summary": "模拟视频展示未成年人在成人陪同下进行安全实验。",
+  "initial_evidence_ids": ["E-001"],
+  "policy_snapshot_id": "PS-001"
+}

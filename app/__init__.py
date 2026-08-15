@@ -1,0 +1,2 @@
+"""JudgeFlow competition demo package."""
+

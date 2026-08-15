@@ -1,0 +1,1 @@
+{"scenario":"success","tool_sequence":["work_order.get","context.get","replay.execute","artifact.put"],"metrics_source":"deterministic_python"}

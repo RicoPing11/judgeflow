@@ -1,0 +1,1 @@
+{"scenario":"success","tool_sequence":["work_order.get","context.get","evidence.search","artifact.put"],"output_artifact_type":"EVIDENCE_BUNDLE","rule":"事实必须引用任务授权 evidence_id"}

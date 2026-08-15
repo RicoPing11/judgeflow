@@ -1,0 +1,261 @@
+{
+  "WorkOrder": {
+    "work_order_id": "WO-001",
+    "aggregate_type": "CASE",
+    "aggregate_id": "CASE-001",
+    "step_type": "INVESTIGATION",
+    "assignee_id": "case-investigator",
+    "input_refs": [{"ref_type": "CASE", "ref_id": "CASE-001"}],
+    "expected_artifact_type": "EVIDENCE_BUNDLE",
+    "run_id": "RUN-001",
+    "trace_id": "TRACE-001",
+    "status": "PENDING",
+    "retry_count": 0,
+    "created_at": "2026-08-12T09:00:00+08:00",
+    "updated_at": "2026-08-12T09:00:00+08:00"
+  },
+  "EvidenceRef": {
+    "evidence_id": "E-001",
+    "source_type": "CONTENT",
+    "source_ref": "fixture://case/CASE-001/video",
+    "content_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "collected_at": "2026-08-12T09:01:00+08:00"
+  },
+  "FactRecord": {
+    "record_type": "OBSERVED_FACT",
+    "fact_id": "F-001",
+    "fact_key": "MINOR_PRESENT",
+    "value": true,
+    "statement": "画面中出现一名未成年人。",
+    "evidence_ids": ["E-001"]
+  },
+  "InferenceRecord": {
+    "record_type": "AGENT_INFERENCE",
+    "inference_id": "I-001",
+    "statement": "该场景可能属于受控教学活动。",
+    "basis_fact_ids": ["F-001"],
+    "confidence": 0.7
+  },
+  "ToolFailure": {
+    "failure_id": "TF-001",
+    "tool_name": "mock.account.lookup",
+    "error_code": "TIMEOUT",
+    "message": "固定 Mock 查询超时。",
+    "retryable": true,
+    "occurred_at": "2026-08-12T09:02:00+08:00"
+  },
+  "EvidenceBundle": {
+    "bundle_id": "EB-001",
+    "raw_evidence_refs": [{
+      "evidence_id": "E-001",
+      "source_type": "CONTENT",
+      "source_ref": "fixture://case/CASE-001/video",
+      "content_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "collected_at": "2026-08-12T09:01:00+08:00"
+    }],
+    "observable_facts": [{
+      "record_type": "OBSERVED_FACT",
+      "fact_id": "F-001",
+      "fact_key": "MINOR_PRESENT",
+      "value": true,
+      "statement": "画面中出现一名未成年人。",
+      "evidence_ids": ["E-001"]
+    }],
+    "agent_inferences": [{
+      "record_type": "AGENT_INFERENCE",
+      "inference_id": "I-001",
+      "statement": "该场景可能属于受控教学活动。",
+      "basis_fact_ids": ["F-001"],
+      "confidence": 0.7
+    }],
+    "missing_information": ["拍摄者身份未提供。"],
+    "tool_failures": []
+  },
+  "RiskArgument": {
+    "argument_id": "RA-001",
+    "conclusions": [{
+      "conclusion_id": "RC-001",
+      "statement": "危险行为要件成立。",
+      "evidence_id": "E-001",
+      "policy_ref": {"policy_id": "MINOR_DANGEROUS_ACT", "version": "1.0", "clause_ids": ["DANGEROUS_ACT"]}
+    }],
+    "uncertainties": ["教学场景例外尚待核对。"]
+  },
+  "CounterArgument": {
+    "argument_id": "CA-001",
+    "conclusions": [{
+      "conclusion_id": "CC-001",
+      "statement": "受控教学例外可能成立。",
+      "evidence_id": "E-002",
+      "policy_ref": {"policy_id": "MINOR_DANGEROUS_ACT", "version": "1.0", "clause_ids": ["CONTROLLED_EDUCATION"]}
+    }],
+    "alternative_explanations": ["行为发生在安全课程中。"]
+  },
+  "DecisionRecord": {
+    "decision_id": "DR-001",
+    "outcome": "VIOLATION",
+    "conclusions": [{
+      "conclusion_id": "DC-001",
+      "statement": "现有证据满足规则要件且不足以确认例外。",
+      "evidence_id": "E-001",
+      "policy_ref": {"policy_id": "MINOR_DANGEROUS_ACT", "version": "1.0", "clause_ids": ["MINOR_PRESENT", "DANGEROUS_ACT", "CONTROLLED_EDUCATION"]}
+    }],
+    "considered_argument_ids": ["RA-001", "CA-001"]
+  },
+  "AppealDecision": {
+    "appeal_decision_id": "AD-001",
+    "outcome": "OVERTURN",
+    "conclusions": [{
+      "conclusion_id": "AC-001",
+      "statement": "新增证据证明受控教学例外成立。",
+      "evidence_id": "E-APPEAL-001",
+      "policy_ref": {"policy_id": "MINOR_DANGEROUS_ACT", "version": "1.0", "clause_ids": ["CONTROLLED_EDUCATION"]}
+    }],
+    "original_decision_id": "DR-001",
+    "new_evidence_ids": ["E-APPEAL-001"]
+  },
+  "AttributionReport": {
+    "report_id": "AR-001",
+    "attribution": "POLICY_GAP",
+    "findings": ["基线规则未清晰表达成人监督可单独构成教学例外的条件。"],
+    "appeal_decision_id": "AD-001",
+    "policy_change_recommended": true
+  },
+  "PolicyCondition": {
+    "all_of": [
+      {"condition_id": "MINOR_PRESENT", "fact": "MINOR_PRESENT", "op": "EQ", "value": true},
+      {"condition_id": "DANGEROUS_ACT", "fact": "DANGEROUS_ACT", "op": "EQ", "value": true}
+    ]
+  },
+  "Policy": {
+    "policy_id": "MINOR_DANGEROUS_ACT",
+    "version": "1.0",
+    "status": "BASELINE",
+    "title": "未成年人危险行为",
+    "description": "未成年人实施危险行为时判定违规；受控教育场景可以例外。",
+    "applicability": {"content_types": ["VIDEO"]},
+    "required_elements": {"all_of": [
+      {"condition_id": "MINOR_PRESENT", "fact": "MINOR_PRESENT", "op": "EQ", "value": true},
+      {"condition_id": "DANGEROUS_ACT", "fact": "DANGEROUS_ACT", "op": "EQ", "value": true}
+    ]},
+    "exceptions": {"any_of": [
+      {"condition_id": "CONTROLLED_EDUCATION", "all_of": [
+        {"condition_id": "ADULT_SUPERVISION", "fact": "ADULT_SUPERVISION", "op": "EQ", "value": true},
+        {"condition_id": "PROTECTIVE_EQUIPMENT", "fact": "PROTECTIVE_EQUIPMENT", "op": "EQ", "value": true},
+        {"condition_id": "EDUCATIONAL_CONTEXT", "fact": "EDUCATIONAL_CONTEXT", "op": "EQ", "value": true}
+      ]}
+    ]},
+    "decision": "VIOLATION",
+    "content_hash": "sha256:0ab92fd9854a5e1e00c2cb59ef579fb86a4584181be0b2da5cc0d66d69302336"
+  },
+  "PolicySnapshot": {
+    "snapshot_id": "PS-001",
+    "policies": [{
+      "policy_id": "MINOR_DANGEROUS_ACT",
+      "version": "1.0",
+      "content_hash": "sha256:0ab92fd9854a5e1e00c2cb59ef579fb86a4584181be0b2da5cc0d66d69302336"
+    }],
+    "snapshot_hash": "sha256:7b79e58afba0bf39a9e1fd9af81a4b02031d34ba7794eeae9c88914767bcff64"
+  },
+  "PolicyProposal": {
+    "proposal_id": "PP-001",
+    "proposal_revision": 1,
+    "base_policy": {
+      "policy_id": "MINOR_DANGEROUS_ACT",
+      "version": "1.0",
+      "content_hash": "sha256:0ab92fd9854a5e1e00c2cb59ef579fb86a4584181be0b2da5cc0d66d69302336"
+    },
+    "candidate_policy": {
+      "policy_id": "MINOR_DANGEROUS_ACT",
+      "version": "2.0-demo-r1",
+      "status": "CANDIDATE",
+      "title": "未成年人危险行为",
+      "description": "明确成人监督和安全措施下的教学例外。",
+      "applicability": {"content_types": ["VIDEO"]},
+      "required_elements": {"all_of": [
+        {"condition_id": "MINOR_PRESENT", "fact": "MINOR_PRESENT", "op": "EQ", "value": true},
+        {"condition_id": "DANGEROUS_ACT", "fact": "DANGEROUS_ACT", "op": "EQ", "value": true}
+      ]},
+      "exceptions": {"any_of": [
+        {"condition_id": "CONTROLLED_EDUCATION", "all_of": [
+          {"condition_id": "ADULT_SUPERVISION", "fact": "ADULT_SUPERVISION", "op": "EQ", "value": true},
+          {"condition_id": "EDUCATIONAL_CONTEXT", "fact": "EDUCATIONAL_CONTEXT", "op": "EQ", "value": true}
+        ]}
+      ]},
+      "decision": "VIOLATION",
+      "content_hash": "sha256:3aec182785c5358863abe745660baea66b5ba6056a45b8004f7d7bffd8623429"
+    },
+    "changes": [{"path": "exceptions", "operation": "REPLACE", "rationale": "明确受控教学边界。"}],
+    "reason": "申诉暴露基线例外条件过窄。",
+    "risks": ["可能扩大例外范围。"]
+  },
+  "ReplayReport": {
+    "replay_id": "REPLAY-001",
+    "proposal_id": "PP-001",
+    "baseline_policy": {
+      "policy_id": "MINOR_DANGEROUS_ACT",
+      "version": "1.0",
+      "content_hash": "sha256:0ab92fd9854a5e1e00c2cb59ef579fb86a4584181be0b2da5cc0d66d69302336"
+    },
+    "candidate_policy": {
+      "policy_id": "MINOR_DANGEROUS_ACT",
+      "version": "2.0-demo-r1",
+      "content_hash": "sha256:3aec182785c5358863abe745660baea66b5ba6056a45b8004f7d7bffd8623429"
+    },
+    "dataset_version": "v1",
+    "dataset_manifest_hash": "sha256:2335f9d68c3a7de614117f6a38b4a02502e101f2d23750493e11fe9794b9b334",
+    "metrics": {
+      "baseline_false_positives": 0,
+      "candidate_false_positives": 0,
+      "baseline_false_negatives": 0,
+      "candidate_false_negatives": 0,
+      "changed_cases": 0
+    },
+    "recommendation": "INCONCLUSIVE",
+    "result_summary": "SCORING 样本中新旧规则结果一致；TRIGGER 改善不计入评分。"
+  },
+  "HumanApproval": {
+    "approval_id": "HA-001",
+    "decision": "APPROVE",
+    "proposal_artifact_id": "ART-PP-001",
+    "replay_id": "REPLAY-001",
+    "reviewer_id": "policy-owner-demo",
+    "comment": "仅批准比赛 Demo 候选版本，不发布生产规则。",
+    "created_at": "2026-08-12T10:00:00+08:00"
+  },
+  "ArtifactEnvelope": {
+    "artifact_id": "ART-EB-001",
+    "artifact_type": "EVIDENCE_BUNDLE",
+    "schema_version": "1.0",
+    "aggregate_type": "CASE",
+    "aggregate_id": "CASE-001",
+    "work_order_id": "WO-001",
+    "run_id": "RUN-001",
+    "trace_id": "TRACE-001",
+    "producer_type": "AGENT",
+    "producer_id": "case-investigator",
+    "payload": {
+      "bundle_id": "EB-001",
+      "raw_evidence_refs": [{
+        "evidence_id": "E-001",
+        "source_type": "CONTENT",
+        "source_ref": "fixture://case/CASE-001/video",
+        "content_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "collected_at": "2026-08-12T09:01:00+08:00"
+      }],
+      "observable_facts": [{
+        "record_type": "OBSERVED_FACT",
+        "fact_id": "F-001",
+        "fact_key": "MINOR_PRESENT",
+        "value": true,
+        "statement": "画面中出现一名未成年人。",
+        "evidence_ids": ["E-001"]
+      }],
+      "agent_inferences": [],
+      "missing_information": [],
+      "tool_failures": []
+    },
+    "content_hash": "sha256:cf35f108b6b997133b76bbcd98636a55b81d3d10eb8518adce34141c9206cfb8",
+    "created_at": "2026-08-12T09:03:00+08:00"
+  }
+}

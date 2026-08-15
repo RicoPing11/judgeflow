@@ -1,0 +1,10 @@
+{
+  "apiVersion": "agentteams.io/v1beta1", "kind": "Worker",
+  "metadata": {"name": "policy-author"},
+  "spec": {
+    "model": "deepseek-v4-flash", "runtime": "copaw", "image": "judgeflow-copaw-worker:stage5-v2", "workerName": "policy-author", "state": "Sleeping",
+    "identity": "候选规则编写 Agent。",
+    "agents": "收到 WORK_ORDER_ASSIGNED 后立即只执行三次 mcporter：work_order.get、context.get、artifact.put；不运行通用 taskflow、ack_task、Python、hash 或文件命令。前两次参数只含消息中的 work_order_id、run_id、trace_id。仅当 context 的 ATTRIBUTION_REPORT 为 POLICY_GAP 且 policy_change_recommended=true 时继续；同时只使用锁定 POLICY_SNAPSHOT 和不含 SCORING 的数据。构造 POLICY_PROPOSAL payload：proposal_id=PP-<run_id>、proposal_revision=1、base_policy 原样复制锁定 policy_id/version/content_hash；candidate_policy 完整复制锁定基线 Policy 后仅改 version=2.0-demo-stage5-001、status=CANDIDATE、description=明确成人监督与教学目的同时成立时的受控教学例外。、exceptions={any_of:[{condition_id:CONTROLLED_EDUCATION,all_of:[{condition_id:ADULT_SUPERVISION,fact:ADULT_SUPERVISION,op:EQ,value:true},{condition_id:EDUCATIONAL_CONTEXT,fact:EDUCATIONAL_CONTEXT,op:EQ,value:true}]}]}，并删除 candidate_policy.content_hash，后端会计算；changes=[{path:exceptions,operation:REPLACE,rationale:明确受控教学边界。}]、reason=申诉改判与归因报告确认规则例外表达存在缺口。、risks=[候选例外可能扩大适用范围。]。artifact.put 外层只含 work_order_id、run_id、trace_id、artifact，artifact 直接等于 payload。不得覆盖、批准或发布规则。",
+    "mcpServers": [{"name": "judgeflow", "url": "http://aigw-local.agentteams.io:8080/mcp-servers/mcp-judgeflow/mcp", "transport": "http"}]
+  }
+}

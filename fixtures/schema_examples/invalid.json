@@ -1,0 +1,208 @@
+{
+  "WorkOrder": {
+    "work_order_id": "WO-BAD",
+    "aggregate_type": "UNKNOWN",
+    "aggregate_id": "CASE-001",
+    "step_type": "INVESTIGATION",
+    "assignee_id": "case-investigator",
+    "input_refs": [{"ref_type": "CASE", "ref_id": "CASE-001"}],
+    "expected_artifact_type": "EVIDENCE_BUNDLE",
+    "run_id": "RUN-001",
+    "trace_id": "TRACE-001",
+    "status": "PENDING",
+    "retry_count": 0,
+    "created_at": "2026-08-12T09:00:00+08:00",
+    "updated_at": "2026-08-12T09:00:00+08:00"
+  },
+  "EvidenceRef": {
+    "evidence_id": "E-BAD",
+    "source_type": "CONTENT",
+    "source_ref": "fixture://bad",
+    "content_hash": "not-a-sha256",
+    "collected_at": "2026-08-12T09:00:00+08:00"
+  },
+  "FactRecord": {
+    "record_type": "AGENT_INFERENCE",
+    "fact_id": "F-BAD",
+    "fact_key": "INTENT",
+    "value": true,
+    "statement": "这是未经观察而得出的意图推断。",
+    "evidence_ids": ["E-001"]
+  },
+  "InferenceRecord": {
+    "record_type": "AGENT_INFERENCE",
+    "inference_id": "I-BAD",
+    "statement": "没有事实依据的推断。",
+    "basis_fact_ids": [],
+    "confidence": 0.5
+  },
+  "ToolFailure": {
+    "failure_id": "TF-BAD",
+    "tool_name": "mock.lookup",
+    "error_code": "EMPTY_RESULT",
+    "message": "未知错误码。",
+    "retryable": false,
+    "occurred_at": "2026-08-12T09:00:00+08:00"
+  },
+  "EvidenceBundle": {
+    "bundle_id": "EB-BAD",
+    "raw_evidence_refs": [{
+      "evidence_id": "E-001",
+      "source_type": "CONTENT",
+      "source_ref": "fixture://case/CASE-001/video",
+      "content_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "collected_at": "2026-08-12T09:01:00+08:00"
+    }],
+    "observable_facts": [{
+      "record_type": "AGENT_INFERENCE",
+      "fact_id": "F-001",
+      "fact_key": "INTENT",
+      "value": true,
+      "statement": "把推断伪装成事实。",
+      "evidence_ids": ["E-001"]
+    }],
+    "agent_inferences": [],
+    "missing_information": [],
+    "tool_failures": []
+  },
+  "RiskArgument": {
+    "argument_id": "RA-BAD",
+    "conclusions": [{
+      "conclusion_id": "RC-BAD",
+      "statement": "没有证据引用的正式结论。",
+      "policy_ref": {"policy_id": "P-1", "version": "1.0", "clause_ids": ["ELEMENT-1"]}
+    }],
+    "uncertainties": []
+  },
+  "CounterArgument": {
+    "argument_id": "CA-BAD",
+    "conclusions": [{
+      "conclusion_id": "CC-BAD",
+      "statement": "缺少规则要件引用。",
+      "evidence_id": "E-001",
+      "policy_ref": {"policy_id": "P-1", "version": "1.0", "clause_ids": []}
+    }],
+    "alternative_explanations": []
+  },
+  "DecisionRecord": {
+    "decision_id": "DR-BAD",
+    "outcome": "VIOLATION",
+    "conclusions": [{
+      "conclusion_id": "DC-BAD",
+      "statement": "裁决没有 evidence_id。",
+      "policy_ref": {"policy_id": "P-1", "version": "1.0", "clause_ids": ["ELEMENT-1"]}
+    }],
+    "considered_argument_ids": ["RA-001", "CA-001"]
+  },
+  "AppealDecision": {
+    "appeal_decision_id": "AD-BAD",
+    "outcome": "OVERTURN",
+    "conclusions": [{
+      "conclusion_id": "AC-BAD",
+      "statement": "缺少政策版本。",
+      "evidence_id": "E-APPEAL-001",
+      "policy_ref": {"policy_id": "P-1", "clause_ids": ["EXCEPTION-1"]}
+    }],
+    "original_decision_id": "DR-001",
+    "new_evidence_ids": ["E-APPEAL-001"]
+  },
+  "AttributionReport": {
+    "report_id": "AR-BAD",
+    "attribution": "AGENT_ERROR",
+    "findings": ["归因是 Agent 错误。"],
+    "appeal_decision_id": "AD-001",
+    "policy_change_recommended": true
+  },
+  "PolicyCondition": {
+    "condition_id": "EXECUTE",
+    "fact": "CONTENT",
+    "op": "EVAL",
+    "value": "__import__('os').system('id')"
+  },
+  "Policy": {
+    "policy_id": "P-BAD",
+    "version": "1.0",
+    "status": "ACTIVE",
+    "title": "非法状态规则",
+    "description": "状态枚举非法。",
+    "applicability": {"content_types": ["VIDEO"]},
+    "required_elements": {"condition_id": "E-1", "fact": "X", "op": "EQ", "value": true},
+    "exceptions": {"condition_id": "EX-1", "fact": "Y", "op": "EQ", "value": true},
+    "decision": "VIOLATION",
+    "content_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "PolicySnapshot": {
+    "snapshot_id": "PS-BAD",
+    "policies": [{
+      "policy_id": "P-1",
+      "content_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }],
+    "snapshot_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "PolicyProposal": {
+    "proposal_id": "PP-BAD",
+    "proposal_revision": 1,
+    "base_policy": {
+      "policy_id": "P-1",
+      "version": "1.0",
+      "content_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "candidate_policy": {
+      "policy_id": "P-1",
+      "version": "1.0",
+      "status": "CANDIDATE",
+      "title": "未变更版本",
+      "description": "候选版本错误复用基线版本号。",
+      "applicability": {"content_types": ["VIDEO"]},
+      "required_elements": {"condition_id": "E-1", "fact": "X", "op": "EQ", "value": true},
+      "exceptions": {"condition_id": "EX-1", "fact": "Y", "op": "EQ", "value": true},
+      "decision": "VIOLATION",
+      "content_hash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    },
+    "changes": [{"path": "exceptions", "operation": "REPLACE", "rationale": "测试。"}],
+    "reason": "测试非法候选版本。",
+    "risks": []
+  },
+  "ReplayReport": {
+    "replay_id": "REPLAY-BAD",
+    "proposal_id": "PP-001",
+    "baseline_policy": {"policy_id": "P-1", "version": "1.0", "content_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+    "candidate_policy": {"policy_id": "P-1", "version": "2.0", "content_hash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"},
+    "dataset_version": "v1",
+    "dataset_manifest_hash": "bad-hash",
+    "metrics": {"baseline_false_positives": 1, "candidate_false_positives": 0, "baseline_false_negatives": 0, "candidate_false_negatives": 0, "changed_cases": 1},
+    "recommendation": "PASS",
+    "result_summary": "哈希非法。"
+  },
+  "HumanApproval": {
+    "approval_id": "HA-BAD",
+    "decision": "APPROVE",
+    "proposal_artifact_id": "ART-PP-001",
+    "replay_id": "REPLAY-001",
+    "reviewer_id": "policy-owner-demo",
+    "comment": "时间格式非法。",
+    "created_at": "not-a-time"
+  },
+  "ArtifactEnvelope": {
+    "artifact_id": "ART-BAD",
+    "artifact_type": "RISK_ARGUMENT",
+    "schema_version": "1.0",
+    "aggregate_type": "CASE",
+    "aggregate_id": "CASE-001",
+    "work_order_id": "WO-001",
+    "run_id": "RUN-001",
+    "trace_id": "TRACE-001",
+    "producer_type": "AGENT",
+    "producer_id": "case-investigator",
+    "payload": {
+      "bundle_id": "EB-001",
+      "raw_evidence_refs": [{"evidence_id": "E-001", "source_type": "CONTENT", "source_ref": "fixture://case", "content_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "collected_at": "2026-08-12T09:01:00+08:00"}],
+      "observable_facts": [],
+      "agent_inferences": [],
+      "missing_information": [],
+      "tool_failures": []
+    },
+    "content_hash": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "created_at": "2026-08-12T09:03:00+08:00"
+  }
+}

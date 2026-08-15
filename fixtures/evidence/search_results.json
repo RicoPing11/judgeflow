@@ -1,0 +1,51 @@
+{
+  "entries": [
+    {
+      "evidence_id": "E-001",
+      "query_type": "CONTENT",
+      "status": "FOUND",
+      "data": {
+        "evidence_id": "E-001",
+        "source_type": "CONTENT",
+        "source_ref": "fixture://case/CASE-001/video",
+        "content_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "collected_at": "2026-08-12T09:01:00+08:00",
+        "observable_facts": [
+          {"fact_key": "MINOR_PRESENT", "value": true, "statement": "画面中出现一名未成年人。"},
+          {"fact_key": "DANGEROUS_ACT", "value": true, "statement": "画面中出现需要安全控制的实验行为。"}
+        ]
+      }
+    },
+    {
+      "evidence_id": "E-INCOMPLETE",
+      "query_type": "CONTENT",
+      "status": "INCOMPLETE_DATA",
+      "message": "固定证据缺少采集时间和内容哈希。",
+      "data": {"evidence_id": "E-INCOMPLETE", "source_ref": "fixture://evidence/incomplete", "missing_fields": ["content_hash", "collected_at"]}
+    },
+    {
+      "evidence_id": "E-APPEAL-001",
+      "query_type": "APPEAL_SUBMISSION",
+      "status": "FOUND",
+      "data": {
+        "evidence_id": "E-APPEAL-001",
+        "source_type": "APPEAL_SUBMISSION",
+        "source_ref": "fixture://appeal/APPEAL-001/safety-plan",
+        "content_hash": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "collected_at": "2026-08-12T09:30:00+08:00",
+        "observable_facts": [
+          {"fact_key": "ADULT_SUPERVISION", "value": true, "statement": "安全方案记录了成人全程监督。"},
+          {"fact_key": "EDUCATIONAL_CONTEXT", "value": true, "statement": "安全方案记录了教学实验目的。"}
+        ]
+      }
+    },
+    {
+      "evidence_id": "E-TOOL-FAILURE",
+      "query_type": "TRANSCRIPT",
+      "status": "TOOL_FAILURE",
+      "error_code": "TIMEOUT",
+      "message": "固定转写工具超时，不能解释为没有转写。",
+      "data": null
+    }
+  ]
+}

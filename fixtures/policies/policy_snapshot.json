@@ -1,0 +1,9 @@
+{
+  "snapshot_id": "PS-001",
+  "policies": [{
+    "policy_id": "MINOR_DANGEROUS_ACT",
+    "version": "1.0",
+    "content_hash": "sha256:0ab92fd9854a5e1e00c2cb59ef579fb86a4584181be0b2da5cc0d66d69302336"
+  }],
+  "snapshot_hash": "sha256:7b79e58afba0bf39a9e1fd9af81a4b02031d34ba7794eeae9c88914767bcff64"
+}

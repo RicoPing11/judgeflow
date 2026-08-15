@@ -1,0 +1,60 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "approval_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Approval Id",
+      "type": "string"
+    },
+    "comment": {
+      "maxLength": 2000,
+      "minLength": 1,
+      "title": "Comment",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "decision": {
+      "enum": [
+        "APPROVE",
+        "REJECT",
+        "REQUEST_CHANGES"
+      ],
+      "title": "Decision",
+      "type": "string"
+    },
+    "proposal_artifact_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Proposal Artifact Id",
+      "type": "string"
+    },
+    "replay_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Replay Id",
+      "type": "string"
+    },
+    "reviewer_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Reviewer Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "approval_id",
+    "decision",
+    "proposal_artifact_id",
+    "replay_id",
+    "reviewer_id",
+    "comment",
+    "created_at"
+  ],
+  "title": "HumanApproval",
+  "type": "object"
+}

@@ -1,0 +1,227 @@
+{
+  "$defs": {
+    "PolicyApplicability": {
+      "additionalProperties": false,
+      "properties": {
+        "content_types": {
+          "items": {
+            "enum": [
+              "VIDEO",
+              "IMAGE",
+              "TEXT",
+              "AUDIO"
+            ],
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Content Types",
+          "type": "array"
+        }
+      },
+      "required": [
+        "content_types"
+      ],
+      "title": "PolicyApplicability",
+      "type": "object"
+    },
+    "PolicyCondition": {
+      "additionalProperties": false,
+      "properties": {
+        "all_of": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/PolicyCondition"
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "All Of"
+        },
+        "any_of": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/PolicyCondition"
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Any Of"
+        },
+        "condition_id": {
+          "anyOf": [
+            {
+              "maxLength": 128,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Condition Id"
+        },
+        "fact": {
+          "anyOf": [
+            {
+              "maxLength": 128,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fact"
+        },
+        "op": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PolicyOperator"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        }
+      },
+      "title": "PolicyCondition",
+      "type": "object"
+    },
+    "PolicyOperator": {
+      "enum": [
+        "EQ",
+        "IN",
+        "GTE",
+        "LTE"
+      ],
+      "title": "PolicyOperator",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "applicability": {
+      "$ref": "#/$defs/PolicyApplicability"
+    },
+    "content_hash": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "decision": {
+      "enum": [
+        "VIOLATION",
+        "NO_VIOLATION"
+      ],
+      "title": "Decision",
+      "type": "string"
+    },
+    "description": {
+      "maxLength": 2000,
+      "minLength": 1,
+      "title": "Description",
+      "type": "string"
+    },
+    "exceptions": {
+      "$ref": "#/$defs/PolicyCondition"
+    },
+    "policy_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Policy Id",
+      "type": "string"
+    },
+    "required_elements": {
+      "$ref": "#/$defs/PolicyCondition"
+    },
+    "status": {
+      "enum": [
+        "BASELINE",
+        "CANDIDATE"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "title": {
+      "maxLength": 2000,
+      "minLength": 1,
+      "title": "Title",
+      "type": "string"
+    },
+    "version": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "policy_id",
+    "version",
+    "status",
+    "title",
+    "description",
+    "applicability",
+    "required_elements",
+    "exceptions",
+    "decision",
+    "content_hash"
+  ],
+  "title": "Policy",
+  "type": "object"
+}

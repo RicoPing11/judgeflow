@@ -1,0 +1,71 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "evidence_ids": {
+      "items": {
+        "maxLength": 128,
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Evidence Ids",
+      "type": "array"
+    },
+    "fact_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Fact Id",
+      "type": "string"
+    },
+    "fact_key": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Fact Key",
+      "type": "string"
+    },
+    "record_type": {
+      "const": "OBSERVED_FACT",
+      "title": "Record Type",
+      "type": "string"
+    },
+    "statement": {
+      "maxLength": 2000,
+      "minLength": 1,
+      "title": "Statement",
+      "type": "string"
+    },
+    "value": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      ],
+      "title": "Value"
+    }
+  },
+  "required": [
+    "record_type",
+    "fact_id",
+    "fact_key",
+    "value",
+    "statement",
+    "evidence_ids"
+  ],
+  "title": "FactRecord",
+  "type": "object"
+}

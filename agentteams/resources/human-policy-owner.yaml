@@ -1,0 +1,12 @@
+{
+  "apiVersion": "agentteams.io/v1beta1",
+  "kind": "Human",
+  "metadata": {"name": "policy-owner"},
+  "spec": {
+    "displayName": "JudgeFlow Policy Owner",
+    "username": "policy-owner",
+    "permissionLevel": 2,
+    "accessibleTeams": ["judgeflow-policy"],
+    "note": "只接收绑定 proposal_artifact_id 与 replay_id 的比赛 Demo 审批提醒；本阶段不执行审批或发布。"
+  }
+}

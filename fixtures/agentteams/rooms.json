@@ -1,0 +1,36 @@
+{
+  "rooms": {
+    "judgeflow-control": {
+      "provisioner": "matrix-client-v3",
+      "members": [
+        "judgeflow-manager",
+        "adjudication-team-leader",
+        "policy-evolution-team-leader",
+        "appeal-reviewer",
+        "demo-admin"
+      ]
+    },
+    "judgeflow-adjudication": {
+      "provisioner": "agentteams-team",
+      "team": "judgeflow-adjudication",
+      "members": [
+        "adjudication-team-leader",
+        "case-investigator",
+        "risk-prosecutor",
+        "counter-reviewer",
+        "independent-judge"
+      ]
+    },
+    "judgeflow-policy": {
+      "provisioner": "agentteams-team",
+      "team": "judgeflow-policy",
+      "members": [
+        "policy-evolution-team-leader",
+        "case-attributor",
+        "policy-author",
+        "replay-analyst",
+        "policy-owner"
+      ]
+    }
+  }
+}

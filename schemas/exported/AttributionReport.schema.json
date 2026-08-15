@@ -1,0 +1,50 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "appeal_decision_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Appeal Decision Id",
+      "type": "string"
+    },
+    "attribution": {
+      "enum": [
+        "EVIDENCE_GAP",
+        "AGENT_ERROR",
+        "POLICY_GAP",
+        "POLICY_CONFLICT"
+      ],
+      "title": "Attribution",
+      "type": "string"
+    },
+    "findings": {
+      "items": {
+        "maxLength": 2000,
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Findings",
+      "type": "array"
+    },
+    "policy_change_recommended": {
+      "title": "Policy Change Recommended",
+      "type": "boolean"
+    },
+    "report_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Report Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "report_id",
+    "attribution",
+    "findings",
+    "appeal_decision_id",
+    "policy_change_recommended"
+  ],
+  "title": "AttributionReport",
+  "type": "object"
+}

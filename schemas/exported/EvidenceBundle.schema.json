@@ -1,0 +1,280 @@
+{
+  "$defs": {
+    "EvidenceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "collected_at": {
+          "format": "date-time",
+          "title": "Collected At",
+          "type": "string"
+        },
+        "content_hash": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Content Hash",
+          "type": "string"
+        },
+        "evidence_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "source_ref": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Source Ref",
+          "type": "string"
+        },
+        "source_type": {
+          "enum": [
+            "CONTENT",
+            "TRANSCRIPT",
+            "ACCOUNT",
+            "RELATIONSHIP",
+            "APPEAL_SUBMISSION"
+          ],
+          "title": "Source Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "source_type",
+        "source_ref",
+        "content_hash",
+        "collected_at"
+      ],
+      "title": "EvidenceRef",
+      "type": "object"
+    },
+    "FactRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_ids": {
+          "items": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "fact_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Fact Id",
+          "type": "string"
+        },
+        "fact_key": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Fact Key",
+          "type": "string"
+        },
+        "record_type": {
+          "const": "OBSERVED_FACT",
+          "title": "Record Type",
+          "type": "string"
+        },
+        "statement": {
+          "maxLength": 2000,
+          "minLength": 1,
+          "title": "Statement",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          ],
+          "title": "Value"
+        }
+      },
+      "required": [
+        "record_type",
+        "fact_id",
+        "fact_key",
+        "value",
+        "statement",
+        "evidence_ids"
+      ],
+      "title": "FactRecord",
+      "type": "object"
+    },
+    "InferenceRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "basis_fact_ids": {
+          "items": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Basis Fact Ids",
+          "type": "array"
+        },
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "inference_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Inference Id",
+          "type": "string"
+        },
+        "record_type": {
+          "const": "AGENT_INFERENCE",
+          "title": "Record Type",
+          "type": "string"
+        },
+        "statement": {
+          "maxLength": 2000,
+          "minLength": 1,
+          "title": "Statement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "record_type",
+        "inference_id",
+        "statement",
+        "basis_fact_ids",
+        "confidence"
+      ],
+      "title": "InferenceRecord",
+      "type": "object"
+    },
+    "ToolFailure": {
+      "additionalProperties": false,
+      "properties": {
+        "error_code": {
+          "enum": [
+            "NOT_FOUND",
+            "INCOMPLETE_DATA",
+            "PERMISSION_DENIED",
+            "VALIDATION_ERROR",
+            "TIMEOUT",
+            "CONFLICT"
+          ],
+          "title": "Error Code",
+          "type": "string"
+        },
+        "failure_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Failure Id",
+          "type": "string"
+        },
+        "message": {
+          "maxLength": 2000,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "occurred_at": {
+          "format": "date-time",
+          "title": "Occurred At",
+          "type": "string"
+        },
+        "retryable": {
+          "title": "Retryable",
+          "type": "boolean"
+        },
+        "tool_name": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Tool Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "failure_id",
+        "tool_name",
+        "error_code",
+        "message",
+        "retryable",
+        "occurred_at"
+      ],
+      "title": "ToolFailure",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "agent_inferences": {
+      "items": {
+        "$ref": "#/$defs/InferenceRecord"
+      },
+      "title": "Agent Inferences",
+      "type": "array"
+    },
+    "bundle_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Bundle Id",
+      "type": "string"
+    },
+    "missing_information": {
+      "items": {
+        "maxLength": 2000,
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Missing Information",
+      "type": "array"
+    },
+    "observable_facts": {
+      "items": {
+        "$ref": "#/$defs/FactRecord"
+      },
+      "title": "Observable Facts",
+      "type": "array"
+    },
+    "raw_evidence_refs": {
+      "items": {
+        "$ref": "#/$defs/EvidenceRef"
+      },
+      "minItems": 1,
+      "title": "Raw Evidence Refs",
+      "type": "array"
+    },
+    "tool_failures": {
+      "items": {
+        "$ref": "#/$defs/ToolFailure"
+      },
+      "title": "Tool Failures",
+      "type": "array"
+    }
+  },
+  "required": [
+    "bundle_id",
+    "raw_evidence_refs",
+    "observable_facts",
+    "agent_inferences",
+    "missing_information",
+    "tool_failures"
+  ],
+  "title": "EvidenceBundle",
+  "type": "object"
+}

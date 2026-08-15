@@ -1,0 +1,7 @@
+{
+  "evidence_id": "E-APPEAL-001",
+  "source_type": "APPEAL_SUBMISSION",
+  "source_ref": "fixture://appeal/APPEAL-001/safety-plan",
+  "content_hash": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+  "collected_at": "2026-08-12T09:30:00+08:00"
+}

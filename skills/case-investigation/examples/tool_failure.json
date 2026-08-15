@@ -1,0 +1,1 @@
+{"scenario":"tool_failure","error_code":"TIMEOUT","action":"写入 tool_failures，不能当作查询结果为空"}

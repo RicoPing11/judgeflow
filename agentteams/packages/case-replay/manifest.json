@@ -1,0 +1,6 @@
+{
+  "type": "worker",
+  "version": 1,
+  "worker": {"model": "deepseek-v4-flash", "runtime": "copaw"},
+  "source": {"hostname": "judgeflow-demo", "skill": "case-replay"}
+}

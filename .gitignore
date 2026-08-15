@@ -1,0 +1,29 @@
+# Python environments and caches
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+**/__pycache__/
+*.py[cod]
+.coverage
+htmlcov/
+
+# Local configuration and secrets
+.env
+.env.*
+!*.env.example
+*.log
+
+# Editor, OS, and local build state
+.DS_Store
+**/.DS_Store
+.obsidian/
+.ppt-build/
+~$*
+
+# Unrelated local project kept beside JudgeFlow
+/opspilot-zero-demo/
+
+# External competition source material; keep the curated summary under docs/
+/GOAI-Agent-Infra-参赛指南.md
+/GOAI-Agent-Infra-参赛指南.pdf

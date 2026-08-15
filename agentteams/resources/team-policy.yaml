@@ -1,0 +1,17 @@
+{
+  "apiVersion": "agentteams.io/v1beta1",
+  "kind": "Team",
+  "metadata": {"name": "judgeflow-policy"},
+  "spec": {
+    "teamName": "judgeflow-policy",
+    "description": "改判归因、必要时的规则草案、确定性回放和 Human 提醒。",
+    "peerMentions": true,
+    "admin": {"name": "policy-owner"},
+    "workerMembers": [
+      {"name": "policy-evolution-team-leader", "role": "team_leader"},
+      {"name": "case-attributor", "role": "worker"},
+      {"name": "policy-author", "role": "worker"},
+      {"name": "replay-analyst", "role": "worker"}
+    ]
+  }
+}

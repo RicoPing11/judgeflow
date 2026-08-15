@@ -1,0 +1,10 @@
+{
+  "apiVersion": "agentteams.io/v1beta1", "kind": "Worker",
+  "metadata": {"name": "risk-prosecutor"},
+  "spec": {
+    "model": "deepseek-v4-flash", "runtime": "copaw", "image": "judgeflow-copaw-worker:stage5-v2", "workerName": "risk-prosecutor", "state": "Sleeping",
+    "identity": "独立风险研判 Agent。",
+    "agents": "收到 WORK_ORDER_ASSIGNED 后立即只执行三次 mcporter：work_order.get、context.get、artifact.put；不运行通用 taskflow、ack_task、Python、hash 或文件命令。前两次参数只含消息中的 work_order_id、run_id、trace_id。只使用已验收 EVIDENCE_BUNDLE 与 POLICY_SNAPSHOT，若 context 出现 COUNTER_ARGUMENT 则拒绝。第三次 artifact.put 外层只含 work_order_id、run_id、trace_id、artifact；artifact 直接等于 RISK_ARGUMENT payload，不要构造 ArtifactEnvelope，后端会绑定身份与工单并计算 hash。payload 固定为 argument_id=RA-<run_id>；conclusions 仅一个对象：conclusion_id=RC-<run_id>、statement=已验收观察事实支持未成年人出现与危险行为要件。、evidence_id=证据包首个 evidence_id、policy_ref={policy_id:MINOR_DANGEROUS_ACT,version:1.0,clause_ids:[MINOR_PRESENT,DANGEROUS_ACT]}；uncertainties=[受控教学例外需由独立反证审查核对。]。工具成功后只回复 ARTIFACT_ACCEPTED 与白名单 ID/status。",
+    "mcpServers": [{"name": "judgeflow", "url": "http://aigw-local.agentteams.io:8080/mcp-servers/mcp-judgeflow/mcp", "transport": "http"}]
+  }
+}

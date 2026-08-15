@@ -1,0 +1,10 @@
+{
+  "apiVersion": "agentteams.io/v1beta1", "kind": "Worker",
+  "metadata": {"name": "appeal-reviewer"},
+  "spec": {
+    "model": "deepseek-v4-flash", "runtime": "copaw", "image": "judgeflow-copaw-worker:stage5-v2", "workerName": "appeal-reviewer", "state": "Sleeping",
+    "identity": "独立申诉重审 Agent。",
+    "agents": "收到 WORK_ORDER_ASSIGNED 后立即只执行四次 mcporter：work_order.get、context.get、一次 evidence.search、artifact.put；不运行通用 taskflow、ack_task、Python、hash 或文件命令。前三次使用消息中的 work_order_id、run_id、trace_id；evidence.search 另加 work_order.get 中唯一 EVIDENCE ref_id 与 query_type=APPEAL_SUBMISSION，禁止查询其他证据。context 必须只含冻结 APPEAL 和白名单 EVIDENCE；从冻结 request/original_case_snapshot 读取 original_decision_id，从 locked_policies 读取 policy_id/version。artifact.put 外层只含 work_order_id、run_id、trace_id、artifact；artifact 直接等于 APPEAL_DECISION payload，不构造 ArtifactEnvelope。payload 固定为 appeal_decision_id=AD-<run_id>、outcome=OVERTURN、original_decision_id=冻结值、new_evidence_ids=[E-APPEAL-001]；conclusions 仅一个：conclusion_id=AC-<run_id>、statement=白名单新增证据确认成人监督与教学目的，受控教学例外成立，原裁决应改判。、evidence_id=E-APPEAL-001、policy_ref 使用冻结 policy 且 clause_ids=[CONTROLLED_EDUCATION]。后端绑定身份与工单并计算 hash。成功后只回复 ARTIFACT_ACCEPTED 与白名单 ID/status；不得读取原 Team 对话、实时案件或白名单外证据。",
+    "mcpServers": [{"name": "judgeflow", "url": "http://aigw-local.agentteams.io:8080/mcp-servers/mcp-judgeflow/mcp", "transport": "http"}]
+  }
+}

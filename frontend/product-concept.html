@@ -1,0 +1,2227 @@
+<!--
+  JudgeFlow 比赛 Demo 产品开发样本
+
+  状态：已确认的目标态页面样本；不是当前已开发前端。
+  用途：指导下一轮产品化页面、只读投影接口和前后端联调。
+  数据：除明确的主演示内容外，批量案件、监控、审批和回放数据均为静态模拟数据。
+  边界：不得把本文件中的动画、计数或状态当作真实运行证据；正式页面必须由现有
+        Case、WorkOrder、Artifact、DomainEvent、Policy、ReplayRun 和 AgentTeams
+        资源经 JudgeFlow 后端投影后驱动。
+  术语：用户可见名称统一使用“规则”；程序字段继续保留 Policy / policy_*。
+  交接：实现前完整阅读 docs/JudgeFlow-产品化页面开发交接.md。
+-->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JudgeFlow · 产品开发样本（静态原型）</title>
+  <meta name="description" content="JudgeFlow 比赛 Demo 产品开发样本；前后端尚未接入">
+  <style>
+    :root {
+      --bg: #f3f5ef;
+      --surface: #ffffff;
+      --surface-2: #f5f8f3;
+      --surface-3: #eaf1eb;
+      --line: #ccd8cf;
+      --line-soft: #dde5df;
+      --text: #17221d;
+      --muted: #65766e;
+      --lime: #4f7f2e;
+      --lime-dark: #dfead8;
+      --cyan: #16796f;
+      --amber: #9b641b;
+      --red: #ad443b;
+      --blue: #326ba8;
+      --paper: #f8faf6;
+      --ink: #15201c;
+      --shadow: 0 14px 36px rgba(39,62,49,.08);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    html { background: var(--bg); }
+    body {
+      margin: 0;
+      min-width: 320px;
+      background:
+        radial-gradient(circle at 82% -10%, rgba(79,127,46,.09), transparent 34%),
+        linear-gradient(180deg, #f8faf6 0, #f1f4ee 100%);
+      color: var(--text);
+      font: 14px/1.55 Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
+    }
+    button, input, select { font: inherit; }
+    button { color: inherit; }
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 2px solid var(--lime);
+      outline-offset: 2px;
+    }
+    .app { min-height: 100vh; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      display: grid;
+      grid-template-columns: 270px minmax(420px, 1fr) auto;
+      align-items: center;
+      height: 70px;
+      padding: 0 26px;
+      border-bottom: 1px solid var(--line-soft);
+      background: rgba(248,250,246,.92);
+      backdrop-filter: blur(18px);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .brand-mark {
+      position: relative;
+      width: 34px;
+      height: 34px;
+      border: 1px solid #466057;
+      border-radius: 10px;
+      background: linear-gradient(145deg, #edf3e8, #dfe8df);
+      box-shadow: inset 0 0 0 5px rgba(79,127,46,.04);
+    }
+    .brand-mark::before, .brand-mark::after {
+      content: "";
+      position: absolute;
+      background: var(--lime);
+      border-radius: 8px;
+    }
+    .brand-mark::before { width: 4px; height: 18px; left: 10px; top: 8px; }
+    .brand-mark::after { width: 10px; height: 4px; right: 7px; top: 15px; }
+    .brand strong { display: block; font-size: 16px; letter-spacing: -.02em; }
+    .brand small { display: block; color: var(--muted); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+    .nav { display: flex; justify-content: center; gap: 7px; }
+    .nav button {
+      border: 0;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--muted);
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 650;
+    }
+    .nav button:hover { color: var(--text); background: var(--surface-2); }
+    .nav button.active { color: var(--text); background: var(--surface-3); }
+    .top-status { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+    .live-chip, .pending-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 30px;
+      padding: 5px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+    .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 4px rgba(185,244,93,.1); }
+    .pending-chip { color: var(--amber); cursor: pointer; background: transparent; }
+    .pending-chip b { color: #fff; background: var(--amber); border-radius: 12px; padding: 0 6px; }
+    .mock-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 5px 10px; border: 1px solid #dfc69d; border-radius: 999px; background: #fff9ee; color: var(--amber); font-size: 11px; white-space: nowrap; }
+    main { max-width: 1540px; margin: 0 auto; padding: 26px; }
+    .view { display: none; animation: enter .18s ease-out; }
+    .view.active { display: block; }
+    @keyframes enter { from { opacity: .2; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 22px; }
+    .eyebrow { margin: 0 0 6px; color: var(--lime); font: 700 10px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .14em; text-transform: uppercase; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin-bottom: 6px; font-size: clamp(27px, 3vw, 42px); line-height: 1.08; letter-spacing: -.04em; }
+    .page-head p { margin: 0; color: var(--muted); max-width: 750px; }
+    .mode {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface);
+      color: var(--muted);
+      font: 11px ui-monospace, SFMono-Regular, Menlo, monospace;
+      white-space: nowrap;
+    }
+    .mode strong { color: var(--cyan); }
+    .panel { border: 1px solid var(--line-soft); border-radius: var(--radius); background: linear-gradient(145deg, #fff, #fafcf8); box-shadow: var(--shadow); }
+    .overview-grid { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(330px, .8fr); gap: 16px; }
+    .hero-panel { min-height: 305px; padding: 26px; overflow: hidden; position: relative; }
+    .hero-panel::after {
+      content: "";
+      position: absolute;
+      width: 320px;
+      height: 320px;
+      right: -130px;
+      top: -160px;
+      border: 1px solid rgba(185,244,93,.14);
+      border-radius: 50%;
+      box-shadow: 0 0 0 55px rgba(185,244,93,.025), 0 0 0 110px rgba(185,244,93,.018);
+    }
+    .hero-top { position: relative; z-index: 1; display: flex; justify-content: space-between; gap: 20px; }
+    .hero-top h2 { max-width: 800px; margin-bottom: 12px; font-size: clamp(25px, 3vw, 42px); line-height: 1.1; letter-spacing: -.04em; font-weight: 620; }
+    .hero-top h2 span { color: var(--lime); }
+    .hero-top p { max-width: 720px; color: var(--muted); font-size: 15px; }
+    .trust-row { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 28px; }
+    .trust {
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(247,250,245,.82);
+    }
+    .trust b { display: block; margin-bottom: 3px; font-size: 12px; }
+    .trust span { color: var(--muted); font-size: 11px; }
+    .check { color: var(--lime); margin-right: 5px; }
+    .hero-action { display: flex; align-items: center; gap: 10px; margin-top: 20px; position: relative; z-index: 1; }
+    .primary, .secondary, .ghost {
+      border: 1px solid transparent;
+      border-radius: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 750;
+    }
+    .primary { color: #fff; background: var(--lime); }
+    .primary:hover { background: #416f24; }
+    .secondary { border-color: var(--line); background: var(--surface-3); }
+    .secondary:hover { border-color: #405950; }
+    .ghost { border-color: var(--line); background: transparent; color: var(--muted); }
+    .ghost:hover { color: var(--text); }
+    .agent-panel { padding: 20px; }
+    .panel-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 16px; }
+    .panel-title h3 { margin: 0; font-size: 15px; }
+    .panel-title span { color: var(--muted); font-size: 11px; }
+    .agent-group { margin-top: 14px; }
+    .group-label { display: flex; justify-content: space-between; color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 7px; }
+    .agent-row { display: flex; align-items: center; gap: 9px; min-height: 36px; padding: 7px 9px; border-radius: 9px; background: #f6f8f4; margin-top: 5px; }
+    .avatar { display: grid; place-items: center; width: 23px; height: 23px; border-radius: 7px; background: #e2eee8; color: var(--cyan); font-size: 9px; font-weight: 800; }
+    .agent-row strong { flex: 1; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .state { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; color: var(--muted); }
+    .state::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #60726b; }
+    .state.running { color: var(--lime); }
+    .state.running::before { background: var(--lime); box-shadow: 0 0 0 3px rgba(185,244,93,.08); }
+    .state.active { color: var(--cyan); }
+    .state.active::before { background: var(--cyan); }
+    .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 16px; }
+    .metric { padding: 17px; }
+    .metric .label { color: var(--muted); font-size: 11px; }
+    .metric strong { display: block; margin: 9px 0 4px; font-size: 30px; line-height: 1; letter-spacing: -.05em; }
+    .metric small { color: var(--muted); }
+    .metric small.good { color: var(--lime); }
+    .charts-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr); gap: 12px; margin-top: 12px; }
+    .chart-card { padding: 18px; min-height: 310px; }
+    .line-chart-wrap { position: relative; min-height: 228px; }
+    .line-chart-wrap canvas { display: block; width: 100%; height: 228px; }
+    .line-chart-legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 5px 0 0 42px; color: var(--muted); font-size: 10px; }
+    .line-chart-legend .legend-caption { color: var(--muted); font-size: 10px; }
+    .line-chart-legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .line-chart-legend i { width: 16px; height: 3px; border-radius: 2px; background: var(--lime); }
+    .line-chart-legend b { min-width: 22px; color: var(--text); font-size: 12px; }
+    .line-chart-legend i.cyan { background: var(--cyan); }
+    .line-chart-legend i.amber { background: #d49a42; }
+    .line-chart-legend i.red { background: var(--red); }
+    .policy-pie-layout { display: grid; justify-items: center; gap: 16px; min-height: 228px; padding-top: 5px; }
+    .policy-pie { position: relative; display: grid; place-items: center; width: 154px; height: 154px; border-radius: 50%; background: conic-gradient(#4f7f2e 0 30%, #16796f 30% 52%, #d49a42 52% 69%, #ad443b 69% 81%, #6f91b6 81% 89%, #a8b3ac 89% 100%); }
+    .policy-pie::after { content: ""; position: absolute; inset: 34px; border-radius: 50%; background: #fff; }
+    .policy-pie strong { position: relative; z-index: 1; font-size: 24px; }
+    .policy-pie strong small { display: block; color: var(--muted); font-size: 9px; text-align: center; }
+    .policy-pie-legend { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 13px; width: 100%; }
+    .policy-pie-legend .legend-item { grid-template-columns: 8px minmax(0,1fr) auto; }
+    .donut-layout { display: flex; align-items: center; justify-content: center; gap: 22px; min-height: 175px; }
+    .donut { position: relative; display: grid; place-items: center; width: 132px; height: 132px; flex: 0 0 auto; border-radius: 50%; background: conic-gradient(#4f7f2e 0 66.67%, #d49a42 66.67% 100%); }
+    .donut::after { content: ""; position: absolute; inset: 24px; border-radius: 50%; background: #fff; }
+    .donut strong { position: relative; z-index: 1; font-size: 28px; letter-spacing: -.05em; }
+    .donut strong small { display: block; color: var(--muted); font-size: 9px; letter-spacing: 0; text-align: center; font-weight: 600; }
+    .legend-list { display: grid; gap: 10px; }
+    .legend-item { display: grid; grid-template-columns: 9px 1fr auto; gap: 8px; align-items: center; color: var(--muted); font-size: 10px; }
+    .legend-item i { width: 8px; height: 8px; border-radius: 3px; background: var(--lime); }
+    .legend-item i.amber { background: #d49a42; }
+    .legend-item i.red { background: var(--red); }
+    .legend-item i.cyan { background: var(--cyan); }
+    .legend-item b { color: var(--text); font-size: 11px; }
+    .bar-chart { display: grid; gap: 13px; padding-top: 6px; }
+    .bar-row { display: grid; grid-template-columns: 82px 1fr 30px; gap: 10px; align-items: center; }
+    .bar-row label { color: var(--muted); font-size: 10px; }
+    .bar-track { height: 12px; overflow: hidden; border-radius: 5px; background: #e8eee9; }
+    .bar-fill { height: 100%; min-width: 4px; border-radius: inherit; background: linear-gradient(90deg, #4f7f2e, #77a94e); }
+    .bar-fill.cyan { background: linear-gradient(90deg, #16796f, #4da69d); }
+    .bar-fill.amber { background: linear-gradient(90deg, #b07827, #d7a254); }
+    .bar-fill.red { background: linear-gradient(90deg, #ad443b, #d56b61); }
+    .bar-row b { font-size: 11px; text-align: right; }
+    .agent-chart { display: grid; align-content: center; min-height: 170px; }
+    .stacked-bar { display: flex; height: 28px; overflow: hidden; border-radius: 8px; background: #e8eee9; }
+    .stacked-bar span { display: grid; place-items: center; color: #fff; font-size: 8px; font-weight: 800; }
+    .stacked-bar .run { width: 8.33%; background: #4f7f2e; }
+    .stacked-bar .sleep { width: 83.34%; background: #8fa198; }
+    .stacked-bar .human { width: 8.33%; background: #16796f; }
+    .agent-chart .legend-list { grid-template-columns: repeat(3, 1fr); margin-top: 18px; }
+    .chart-foot { margin: 13px 0 0; color: var(--muted); font-size: 9px; border-top: 1px solid var(--line-soft); padding-top: 10px; }
+    .monitor-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 24px 0 10px; }
+    .monitor-heading h2 { margin: 0; font-size: 19px; letter-spacing: -.02em; }
+    .monitor-heading p { margin: 2px 0 0; color: var(--muted); font-size: 10px; }
+    .monitor-heading span { color: var(--muted); font: 9px ui-monospace, monospace; }
+    .agent-monitor-grid { display: grid; grid-template-columns: 1fr 1.35fr 1fr; gap: 12px; }
+    .token-empty { display: grid; place-items: center; min-height: 156px; border: 1px dashed #bdcbc0; border-radius: 12px; background: #f8faf7; text-align: center; padding: 18px; }
+    .token-empty strong { display: block; font-size: 22px; color: var(--muted); }
+    .token-empty p { max-width: 230px; margin: 7px 0 0; color: var(--muted); font-size: 9px; }
+    .token-fields { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
+    .token-fields span { padding: 8px 4px; border-radius: 8px; background: #edf2ee; color: var(--muted); text-align: center; font-size: 8px; }
+    .flow-strip { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1px; margin-top: 16px; overflow: hidden; }
+    .flow-step { min-height: 90px; padding: 15px; background: var(--surface); border-right: 1px solid var(--line-soft); }
+    .flow-step:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+    .flow-step:last-child { border-radius: 0 var(--radius) var(--radius) 0; border: 0; }
+    .flow-step span { color: var(--muted); font: 10px ui-monospace, monospace; }
+    .flow-step b { display: block; margin: 8px 0 3px; font-size: 12px; }
+    .flow-step em { color: var(--lime); font-size: 10px; font-style: normal; }
+    .flow-step.current { background: linear-gradient(145deg, #edf5e8, #e4efe0); box-shadow: inset 0 3px 0 var(--lime); }
+    .section-grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: 16px; margin-top: 16px; }
+    .activity, .governance { padding: 20px; }
+    .event { display: grid; grid-template-columns: 86px 18px 1fr; gap: 8px; align-items: start; padding: 10px 0; border-top: 1px solid var(--line-soft); }
+    .event:first-of-type { border-top: 0; }
+    .event time { color: var(--muted); font: 10px ui-monospace, monospace; }
+    .event-dot { width: 8px; height: 8px; margin-top: 4px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 0 4px rgba(98,223,203,.06); }
+    .event b { display: block; font-size: 11px; }
+    .event p { margin: 2px 0 0; color: var(--muted); font-size: 11px; }
+    .gate { padding: 14px; border: 1px solid #dfcaa6; border-radius: 12px; background: #fff9ee; }
+    .gate strong { display: flex; justify-content: space-between; gap: 10px; color: var(--amber); }
+    .gate p { margin: 8px 0 12px; color: var(--muted); font-size: 11px; }
+    .gate .primary { width: 100%; }
+    .tiny-note { margin: 12px 0 0; color: var(--muted); font-size: 10px; }
+    .toolbar { display: grid; grid-template-columns: minmax(220px, 1fr) 180px auto; gap: 10px; margin-bottom: 14px; }
+    #cases .toolbar { grid-template-columns: minmax(240px, 1fr) 180px 220px auto; }
+    .search, .filter {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: var(--surface);
+      color: var(--text);
+      padding: 11px 13px;
+    }
+    .search::placeholder { color: #687d74; }
+    .table-panel { overflow: hidden; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 900px; }
+    th, td { padding: 14px 16px; border-bottom: 1px solid var(--line-soft); text-align: left; }
+    th { color: var(--muted); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; background: #f3f6f2; }
+    td { font-size: 12px; }
+    tbody tr { cursor: pointer; transition: background .12s ease; }
+    tbody tr:hover { background: #f0f7f3; }
+    tbody tr:last-child td { border-bottom: 0; }
+    .case-code { font: 700 11px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--text); }
+    .policy-link-list { display: flex; flex-wrap: wrap; gap: 5px; max-width: 390px; }
+    .policy-cell-link { display: inline-flex; margin: 0; padding: 4px 7px; border: 1px solid #c8ddd6; border-radius: 7px; background: #eff7f4; color: var(--cyan); font-size: 10px; font-weight: 750; text-align: left; cursor: pointer; }
+    .policy-cell-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+    #cases th:nth-child(4), #cases th:nth-child(5), #cases td:nth-child(4), #cases td:nth-child(5) { white-space: nowrap; }
+    .table-pagination { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 16px; border-top: 1px solid var(--line-soft); background: #f8faf7; }
+    .table-pagination > span { color: var(--muted); font-size: 11px; }
+    .pagination-controls { display: flex; align-items: center; gap: 6px; }
+    .pagination-controls button { min-width: 34px; height: 34px; padding: 0 9px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--muted); cursor: pointer; font-size: 11px; }
+    .pagination-controls button:hover:not(:disabled) { border-color: var(--lime); color: var(--text); }
+    .pagination-controls button.active { border-color: var(--lime); background: #e7f0e2; color: #355d20; font-weight: 800; }
+    .pagination-controls button:disabled { opacity: .42; cursor: not-allowed; }
+    .pagination-size { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 10px; }
+    .pagination-size select { height: 34px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--text); padding: 0 7px; }
+    .sub { display: block; color: var(--muted); font-size: 10px; margin-top: 3px; }
+    .badge { display: inline-flex; align-items: center; padding: 4px 7px; border-radius: 7px; font-size: 9px; font-weight: 800; letter-spacing: .03em; }
+    .badge.green { color: var(--lime); background: rgba(185,244,93,.09); }
+    .badge.cyan { color: var(--cyan); background: rgba(98,223,203,.09); }
+    .badge.amber { color: var(--amber); background: rgba(244,199,109,.1); }
+    .badge.red { color: var(--red); background: rgba(255,133,121,.09); }
+    .badge.gray { color: #a3b1ab; background: rgba(163,177,171,.08); }
+    .empty-row { display: none; text-align: center; color: var(--muted); padding: 35px; }
+    .detail-head { margin-bottom: 14px; }
+    .back { border: 0; background: transparent; color: var(--muted); cursor: pointer; padding: 0; margin-bottom: 12px; }
+    .back:hover { color: var(--text); }
+    .case-title { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .case-title h1 { margin: 0; font-size: 29px; }
+    .case-meta { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 9px; color: var(--muted); font-size: 11px; }
+    .case-meta code { color: var(--cyan); }
+    .detail-grid { display: grid; grid-template-columns: 230px minmax(450px, 1fr) 330px; gap: 14px; align-items: start; }
+    .org-rail, .process, .inspector { padding: 16px; }
+    .org-node { padding: 10px; border: 1px solid var(--line-soft); border-radius: 10px; background: #f7f9f6; margin-top: 7px; }
+    .org-node b { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 10px; }
+    .org-node p { margin: 4px 0 0; color: var(--muted); font-size: 9px; }
+    .org-node.dim { opacity: .5; }
+    .process-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 18px; }
+    .process-header h3 { margin: 0; }
+    .process-header span { color: var(--cyan); font: 9px ui-monospace, monospace; }
+    .process-lane { position: relative; padding-left: 26px; }
+    .process-lane::before { content: ""; position: absolute; left: 9px; top: 8px; bottom: 8px; width: 1px; background: #375047; }
+    .process-node {
+      position: relative;
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      min-height: 60px;
+      padding: 10px;
+      margin: 9px 0;
+      border: 1px solid var(--line-soft);
+      border-radius: 11px;
+      background: #fafbf9;
+      cursor: pointer;
+    }
+    .process-node::before { content: ""; position: absolute; left: -21px; top: 27px; width: 20px; height: 1px; background: #375047; }
+    .process-node:hover, .process-node.selected { border-color: #506b61; background: var(--surface-3); }
+    .process-node.selected { box-shadow: inset 3px 0 0 var(--lime); }
+    .node-icon { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: #e4eee1; color: var(--lime); font-size: 10px; font-weight: 850; }
+    .node-copy b { display: block; font-size: 11px; }
+    .node-copy span { color: var(--muted); font-size: 9px; }
+    .parallel {
+      margin: 10px 0 10px 26px;
+      padding: 10px;
+      border: 1px dashed #3c564d;
+      border-radius: 13px;
+      background: #f4faf7;
+    }
+    .parallel-label { color: var(--cyan); font: 9px ui-monospace, monospace; letter-spacing: .08em; }
+    .parallel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .parallel .process-node { grid-template-columns: 23px 1fr; min-height: 68px; margin-bottom: 0; }
+    .parallel .process-node::before { display: none; }
+    .parallel .node-icon { width: 23px; height: 23px; }
+    .fork-proof { display: flex; gap: 6px; flex-wrap: wrap; margin: 9px 0 0; }
+    .fork-proof span { padding: 3px 6px; border-radius: 6px; background: rgba(98,223,203,.07); color: var(--cyan); font-size: 8px; }
+    .branch-box { margin: 12px 0 12px 26px; padding: 10px; border: 1px solid var(--line-soft); border-radius: 12px; }
+    .branch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .branch { padding: 11px; border-radius: 10px; background: #f8faf7; cursor: pointer; }
+    .branch.policy { border: 1px solid rgba(244,199,109,.36); }
+    .branch.closed { border: 1px solid var(--line-soft); opacity: .62; }
+    .branch b { display: block; margin-bottom: 4px; font-size: 10px; }
+    .branch span { color: var(--muted); font-size: 9px; }
+    .agent-flowchart { display: grid; justify-items: center; gap: 8px; }
+    .agent-stage { width: min(100%, 590px); border: 1px solid var(--line); border-radius: 13px; background: #fff; overflow: hidden; cursor: pointer; transition: .15s ease; }
+    .agent-stage:hover, .agent-stage.selected { border-color: #78966d; box-shadow: 0 8px 24px rgba(51,86,59,.08); }
+    .agent-stage.selected { box-shadow: inset 4px 0 0 var(--lime), 0 8px 24px rgba(51,86,59,.08); }
+    .agent-stage.coordinator { background: #f5f8f4; border-style: dashed; }
+    .agent-stage.human-stage { background: #fff9ee; border-color: #dfc69d; }
+    .agent-stage-head { display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--line-soft); }
+    .agent-stage-head .avatar { width: 30px; height: 30px; }
+    .agent-stage-head b { display: block; font-size: 11px; }
+    .agent-stage-head small { display: block; color: var(--muted); font-size: 8px; }
+    .io-grid { display: grid; grid-template-columns: 1fr 1fr; }
+    .io-box { padding: 10px 12px; min-height: 63px; }
+    .io-box + .io-box { border-left: 1px solid var(--line-soft); background: #f7faf7; }
+    .io-box label { display: block; margin-bottom: 5px; color: var(--muted); font-size: 8px; text-transform: uppercase; letter-spacing: .08em; }
+    .io-box p { margin: 0; font-size: 9px; }
+    .flow-arrow { color: #7d9187; font-size: 18px; line-height: 1; }
+    .parallel-agents { width: 100%; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; padding: 10px; border: 1px dashed #a9c5b9; border-radius: 15px; background: #f4faf7; }
+    .parallel-agents .agent-stage { width: 100%; }
+    .parallel-divider { display: grid; place-items: center; color: var(--cyan); font-size: 9px; writing-mode: vertical-rl; letter-spacing: .08em; }
+    .flow-gate { padding: 5px 9px; border-radius: 999px; background: #e6f0e2; color: var(--lime); font-size: 8px; font-weight: 800; }
+    .policy-table-row { cursor: pointer; }
+    .policy-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .policy-card { padding: 18px; }
+    .policy-rule { padding: 12px 0; border-top: 1px solid var(--line-soft); }
+    .policy-rule:first-of-type { border-top: 0; }
+    .policy-rule label { display: block; color: var(--muted); font-size: 9px; text-transform: uppercase; letter-spacing: .08em; }
+    .policy-rule p { margin: 5px 0 0; font-size: 11px; }
+    .condition-list { display: grid; gap: 7px; margin-top: 9px; }
+    .condition { display: flex; align-items: center; gap: 8px; padding: 9px; border: 1px solid var(--line-soft); border-radius: 9px; background: #f7faf7; font-size: 9px; }
+    .condition i { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; background: #e6efe2; color: var(--lime); font-style: normal; font-weight: 800; }
+    .version-timeline { display: grid; gap: 10px; }
+    .version-item { position: relative; padding: 12px 12px 12px 28px; border: 1px solid var(--line-soft); border-radius: 11px; }
+    .version-item::before { content: ""; position: absolute; left: 12px; top: 17px; width: 7px; height: 7px; border-radius: 50%; background: var(--lime); }
+    .version-item.candidate::before { background: var(--amber); }
+    .version-item b { display: block; font-size: 11px; }
+    .version-item p { margin: 4px 0 0; color: var(--muted); font-size: 9px; }
+    .policy-detail-primary { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 16px; }
+    .policy-detail-secondary { display: grid; grid-template-columns: 1.25fr .75fr; gap: 16px; }
+    .policy-question-card { padding: 22px; }
+    .policy-question { margin: 0 0 14px; color: var(--text); font-size: 18px; font-weight: 850; letter-spacing: -.015em; }
+    .policy-purpose-title { max-width: 780px; margin: 0; font-size: 17px; font-weight: 720; line-height: 1.65; letter-spacing: 0; }
+    .policy-purpose-copy { max-width: 780px; margin: 9px 0 0; color: var(--muted); font-size: 13px; line-height: 1.7; }
+    .policy-role-strip { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line-soft); }
+    .policy-role-strip span { padding: 7px 10px; border-radius: 8px; background: #edf4e9; color: #3f6630; font-size: 12px; font-weight: 750; }
+    .policy-role-strip i { color: #829287; font-style: normal; }
+    .policy-usage-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 13px; }
+    .policy-timebar { margin-top: 2px; margin-bottom: 14px; }
+    .policy-usage-stat { min-height: 88px; padding: 13px; border: 1px solid var(--line-soft); border-radius: 11px; background: #f7faf6; }
+    .policy-usage-stat label { display: block; color: var(--muted); font-size: 12px; }
+    .policy-usage-stat strong { display: block; margin-top: 7px; font-size: 22px; line-height: 1.1; }
+    .policy-usage-stat small { display: block; margin-top: 5px; color: var(--muted); font-size: 11px; }
+    .policy-logic-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+    .policy-logic-box { padding: 15px; border: 1px solid var(--line-soft); border-radius: 12px; background: #f7faf6; }
+    .policy-logic-box.exception { background: #fff9ee; }
+    .policy-logic-box h4 { margin: 0 0 4px; font-size: 14px; }
+    .policy-logic-box > p { margin: 0 0 10px; color: var(--muted); font-size: 11px; }
+    .policy-version-summary { display: grid; gap: 10px; margin-top: 13px; }
+    .policy-version-row { padding: 13px; border: 1px solid var(--line-soft); border-radius: 11px; }
+    .policy-version-row.current { background: #f1f7ed; }
+    .policy-version-row.candidate { background: #fff9ee; }
+    .policy-version-row b { display: block; font-size: 13px; }
+    .policy-version-row p { margin: 5px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+    .policy-tech-note { margin: 12px 0 0; color: var(--muted); font-size: 10px; line-height: 1.55; }
+    .inspector { position: sticky; top: 86px; }
+    .inspect-kicker { color: var(--lime); font: 700 9px ui-monospace, monospace; letter-spacing: .1em; }
+    .inspector h3 { margin: 8px 0 4px; font-size: 18px; }
+    .inspector > p { color: var(--muted); font-size: 10px; }
+    .inspect-block { padding: 11px 0; border-top: 1px solid var(--line-soft); }
+    .inspect-block label { display: block; margin-bottom: 6px; color: var(--muted); font-size: 9px; text-transform: uppercase; letter-spacing: .08em; }
+    .inspect-block p { margin: 0; font-size: 10px; }
+    .ref-list { display: flex; gap: 5px; flex-wrap: wrap; }
+    .ref-list code { padding: 4px 6px; border-radius: 6px; background: #edf3ef; color: var(--cyan); font-size: 8px; }
+    .accept-chain { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+    .accept-chain span { position: relative; padding: 7px 3px; border-radius: 7px; background: rgba(185,244,93,.065); color: var(--lime); text-align: center; font-size: 8px; }
+    .accept-chain span:not(:last-child)::after { content: "›"; position: absolute; right: -5px; color: var(--muted); }
+    .drawer-button { width: 100%; margin-top: 12px; }
+    .review-layout { display: grid; grid-template-columns: 360px 1fr; gap: 16px; }
+    .review-list { padding: 12px; }
+    .review-card { padding: 14px; border: 1px solid #dfc69d; border-radius: 12px; background: #fff9ef; cursor: pointer; }
+    .review-card:hover { border-color: var(--amber); }
+    .review-card.active { border: 2px solid var(--amber); background: #fff5df; box-shadow: 0 7px 18px rgba(116,79,25,.08); }
+    .review-card-head { display: flex; justify-content: space-between; gap: 10px; }
+    .review-card h3 { margin: 8px 0 5px; font-size: 14px; }
+    .review-card p { margin: 0; color: var(--muted); font-size: 10px; }
+    .review-list-note { margin: 8px 0 12px; color: var(--muted); font-size: 11px; }
+    .review-list-scroll { display: grid; gap: 9px; max-height: 700px; overflow-y: auto; padding-right: 4px; }
+    .review-evidence { display: grid; grid-template-columns: .8fr 1.2fr; gap: 12px; padding: 16px; }
+    .appeal-story, .diff-card, .replay-card, .approval-card { border: 1px solid var(--line-soft); border-radius: 13px; padding: 15px; background: #f8faf7; }
+    .appeal-story h3, .diff-card h3, .replay-card h3, .approval-card h3 { margin: 5px 0 8px; font-size: 15px; }
+    .appeal-story p, .diff-card p, .replay-card p, .approval-card p { color: var(--muted); font-size: 10px; }
+    .verdict-shift { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; margin-top: 14px; }
+    .verdict { padding: 10px; border-radius: 9px; background: var(--surface-2); text-align: center; }
+    .verdict strong { display: block; font-size: 10px; }
+    .verdict span { color: var(--muted); font-size: 8px; }
+    .arrow { color: var(--lime); }
+    .diff-card { grid-column: 2; grid-row: 1 / span 2; }
+    .diff-line { display: grid; grid-template-columns: 74px 1fr; gap: 8px; padding: 9px 0; border-top: 1px solid var(--line-soft); font-size: 9px; }
+    .diff-line:first-of-type { border-top: 0; }
+    .diff-line b { color: var(--muted); }
+    .diff-line.add span { color: var(--lime); }
+    .replay-card { grid-column: 1 / -1; }
+    .replay-columns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+    .replay-signal { padding: 11px; border: 1px solid var(--line-soft); border-radius: 10px; }
+    .replay-signal label { color: var(--muted); font-size: 8px; }
+    .replay-signal strong { display: block; margin: 5px 0 2px; font-size: 12px; }
+    .replay-signal span { color: var(--muted); font-size: 8px; }
+    .approval-card { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 18px; border-color: rgba(185,244,93,.22); }
+    .approval-actions { display: flex; gap: 8px; }
+    .review-evidence { display: block; }
+    .approval-context { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 14px; padding: 14px 16px; border: 1px solid var(--line-soft); border-radius: 12px; background: #f4f7f3; }
+    .approval-context b { display: block; font-size: 14px; }
+    .approval-context p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+    .approval-context .verdict-shift { width: 270px; flex: 0 0 270px; margin: 0; }
+    .approval-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .approval-basis { overflow: hidden; border: 1px solid var(--line); border-radius: 15px; background: #fff; }
+    .approval-basis.change { border-top: 5px solid var(--amber); }
+    .approval-basis.impact { border-top: 5px solid var(--cyan); }
+    .approval-basis-head { display: grid; grid-template-columns: 46px 1fr; gap: 12px; align-items: center; padding: 17px 18px; border-bottom: 1px solid var(--line-soft); }
+    .approval-basis-head > span { color: #9aab9f; font-size: 27px; font-weight: 850; line-height: 1; }
+    .approval-basis-head h2 { margin: 0; font-size: 22px; }
+    .approval-basis-head p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+    .approval-basis-body { padding: 18px; }
+    .approval-summary { margin-bottom: 14px; padding: 13px 14px; border-radius: 11px; background: #fff8eb; }
+    .impact .approval-summary { background: #edf7f5; }
+    .approval-summary label { display: block; color: var(--muted); font-size: 11px; }
+    .approval-summary strong { display: block; margin-top: 4px; font-size: 16px; line-height: 1.45; }
+    .plain-change { margin: 0 0 15px; padding: 15px; border-radius: 12px; background: #fff4dc; font-size: 18px; font-weight: 850; line-height: 1.5; }
+    .rule-before-after { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .rule-version-box { padding: 13px; border: 1px solid var(--line-soft); border-radius: 11px; background: #f8faf7; }
+    .rule-version-box.after { border-color: #d8bd8c; background: #fffaf0; }
+    .rule-version-box label { display: block; margin-bottom: 8px; color: var(--muted); font-size: 11px; font-weight: 750; }
+    .rule-version-box p { margin: 0; font-size: 13px; line-height: 1.6; }
+    .change-detail { display: grid; gap: 8px; margin-top: 12px; }
+    .change-detail div { display: grid; grid-template-columns: 88px 1fr; gap: 9px; padding-top: 9px; border-top: 1px solid var(--line-soft); font-size: 12px; }
+    .change-detail b { color: var(--muted); }
+    .change-detail .removed { color: #a45d28; font-weight: 750; }
+    .impact-grid { display: grid; gap: 9px; }
+    .impact-row { display: grid; grid-template-columns: 112px 1fr; gap: 12px; align-items: center; padding: 12px; border: 1px solid var(--line-soft); border-radius: 11px; }
+    .impact-row label { color: var(--muted); font-size: 11px; }
+    .impact-row strong { display: block; font-size: 15px; }
+    .impact-row small { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; }
+    .impact-conclusion { margin: 13px 0 0; padding: 12px 13px; border-left: 4px solid var(--amber); background: #fff9ee; font-size: 12px; line-height: 1.6; }
+    .impact-hero { padding: 17px; border-radius: 12px; background: #eaf6f3; text-align: center; }
+    .impact-hero strong { display: block; color: var(--cyan); font-size: 38px; line-height: 1; }
+    .impact-hero b { display: block; margin-top: 7px; font-size: 16px; }
+    .impact-hero span { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; }
+    .impact-numbers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+    .impact-number { padding: 12px 8px; border: 1px solid var(--line-soft); border-radius: 11px; text-align: center; }
+    .impact-number label { display: block; color: var(--muted); font-size: 11px; }
+    .impact-number strong { display: block; margin-top: 5px; font-size: 24px; }
+    .plain-conclusion { margin: 12px 0 0; padding: 13px 14px; border-left: 4px solid var(--amber); background: #fff9ee; font-size: 14px; line-height: 1.6; }
+    .plain-conclusion b { display: block; margin-bottom: 2px; font-size: 12px; }
+    .replay-scope { display: grid; grid-template-columns: 1.45fr .55fr; gap: 9px; }
+    .replay-scope > div { padding: 13px; border: 1px solid var(--line-soft); border-radius: 11px; background: #f7faf9; }
+    .replay-scope label { display: block; color: var(--muted); font-size: 11px; }
+    .replay-scope strong { display: block; margin-top: 5px; font-size: 16px; line-height: 1.35; }
+    .replay-scope span { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; }
+    .replay-scope .replay-total strong { color: var(--cyan); font-size: 30px; }
+    .replay-result-split { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 10px; }
+    .replay-result-card { padding: 14px; border: 1px solid var(--line-soft); border-radius: 11px; }
+    .replay-result-card.affected { border-color: #d9bf92; background: #fffaf0; }
+    .replay-result-card label { color: var(--muted); font-size: 11px; }
+    .replay-result-card strong { display: block; margin-top: 4px; font-size: 28px; }
+    .replay-result-card span { display: block; color: var(--muted); font-size: 11px; }
+    .replay-direction { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 9px; }
+    .replay-direction-card { padding: 13px; border-radius: 11px; text-align: center; }
+    .replay-direction-card.lighter { background: #edf6e9; color: #416b2c; }
+    .replay-direction-card.heavier { background: #fff0ed; color: #985346; }
+    .replay-direction-card label { display: block; font-size: 12px; font-weight: 800; }
+    .replay-direction-card strong { display: block; margin: 5px 0 2px; font-size: 27px; }
+    .replay-direction-card span { display: block; font-size: 11px; }
+    .replay-equation { margin: 10px 0 0; color: var(--muted); font-size: 11px; text-align: center; }
+    .approval-decision { margin-top: 14px; }
+    .approval-policy-link { display: inline-flex; align-items: center; gap: 7px; margin-top: 6px; padding: 0; border: 0; background: transparent; color: var(--cyan); cursor: pointer; font-size: 12px; font-weight: 800; }
+    .approval-policy-link:hover { text-decoration: underline; }
+    .replay-detail-summary { display: grid; grid-template-columns: 1.25fr repeat(4, .75fr); gap: 10px; margin-bottom: 16px; }
+    .replay-detail-stat { padding: 15px; }
+    .replay-detail-stat label { display: block; color: var(--muted); font-size: 11px; }
+    .replay-detail-stat strong { display: block; margin-top: 5px; font-size: 25px; }
+    .replay-detail-stat.scope strong { font-size: 15px; line-height: 1.5; }
+    .replay-detail-stat small { display: block; margin-top: 4px; color: var(--muted); font-size: 10px; }
+    .replay-facts { min-width: 270px; color: var(--muted); font-size: 12px; line-height: 1.55; }
+    .replay-verdict { font-weight: 800; white-space: nowrap; }
+    .replay-verdict.violation { color: #a74d3e; }
+    .replay-verdict.clear { color: var(--lime); }
+    .replay-case-link { padding: 0; border: 0; background: transparent; color: var(--cyan); cursor: pointer; font: inherit; font-weight: 850; text-align: left; }
+    .replay-case-link:hover { text-decoration: underline; }
+    .warning-line { color: var(--amber) !important; }
+    .drawer-backdrop { position: fixed; inset: 0; z-index: 60; background: rgba(1,6,4,.62); opacity: 0; pointer-events: none; transition: opacity .18s ease; }
+    .drawer-backdrop.open { opacity: 1; pointer-events: auto; }
+    .drawer {
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: min(520px, 94vw);
+      height: 100%;
+      padding: 22px;
+      overflow: auto;
+      border-left: 1px solid var(--line);
+      background: #fbfcf9;
+      transform: translateX(100%);
+      transition: transform .2s ease;
+    }
+    .drawer-backdrop.open .drawer { transform: none; }
+    .drawer-head { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+    .drawer-head h2 { margin: 0; font-size: 20px; }
+    .close { width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 9px; background: transparent; cursor: pointer; }
+    .evidence-record { margin-top: 16px; padding: 14px; border: 1px solid var(--line-soft); border-radius: 12px; }
+    .evidence-record label { display: block; color: var(--muted); font-size: 9px; text-transform: uppercase; letter-spacing: .08em; }
+    .evidence-record code { display: block; margin-top: 6px; color: var(--cyan); overflow-wrap: anywhere; font-size: 10px; }
+    .toast { position: fixed; right: 20px; bottom: 20px; z-index: 90; padding: 12px 15px; border: 1px solid #a9c49a; border-radius: 11px; background: #edf6e8; color: var(--lime); box-shadow: var(--shadow); opacity: 0; transform: translateY(8px); pointer-events: none; transition: .2s ease; }
+    .toast.show { opacity: 1; transform: none; }
+    /* 统一可读性字号：比赛大屏和普通笔记本均以 12px 以上作为正文下限 */
+    body { font-size: 16px; line-height: 1.62; }
+    .brand strong { font-size: 19px; }
+    .brand small { font-size: 11px; }
+    .nav button { font-size: 15px; padding: 11px 17px; }
+    .live-chip, .pending-chip { font-size: 12px; }
+    .eyebrow { font-size: 12px; }
+    h1 { font-size: clamp(32px, 3.4vw, 48px); }
+    .page-head p { font-size: 16px; }
+    .mode { font-size: 12px; }
+    .hero-top h2 { font-size: clamp(30px, 3.2vw, 46px); }
+    .hero-top p { font-size: 16px; }
+    .trust b { font-size: 14px; }
+    .trust span { font-size: 12px; }
+    .primary, .secondary, .ghost { font-size: 14px; padding: 11px 16px; }
+    .panel-title h3 { font-size: 17px; }
+    .panel-title span { font-size: 12px; }
+    .group-label { font-size: 11px; }
+    .agent-row strong { font-size: 13px; }
+    .state { font-size: 11px; }
+    .metric .label { font-size: 13px; }
+    .metric strong { font-size: 36px; }
+    .metric small { font-size: 12px; }
+    .monitor-heading h2 { font-size: 23px; }
+    .monitor-heading p { font-size: 13px; }
+    .monitor-heading span { font-size: 11px; }
+    .donut strong { font-size: 32px; }
+    .donut strong small { font-size: 11px; }
+    .legend-item { font-size: 12px; }
+    .legend-item b { font-size: 13px; }
+    .bar-row label { font-size: 12px; }
+    .bar-row b { font-size: 13px; }
+    .chart-foot { font-size: 11px; }
+    .token-empty b { font-size: 14px; }
+    .token-empty p { font-size: 11px; }
+    .token-fields span { font-size: 10px; }
+    .flow-step span { font-size: 11px; }
+    .flow-step b { font-size: 14px; }
+    .flow-step em { font-size: 11px; }
+    .event time { font-size: 11px; }
+    .event b { font-size: 13px; }
+    .event p { font-size: 12px; }
+    .gate p, .tiny-note { font-size: 12px; }
+    .search, .filter { font-size: 14px; padding: 12px 14px; }
+    th { font-size: 12px; }
+    td { font-size: 14px; }
+    .case-code { font-size: 13px; }
+    .sub { font-size: 11px; }
+    .badge { font-size: 11px; padding: 5px 8px; }
+    .back { font-size: 14px; }
+    .case-title h1 { font-size: 34px; }
+    .case-meta { font-size: 13px; }
+    .org-node b { font-size: 13px; }
+    .org-node p { font-size: 11px; }
+    .process-header h3 { font-size: 18px; }
+    .process-header span { font-size: 11px; }
+    .agent-stage-head b { font-size: 14px; }
+    .agent-stage-head small { font-size: 11px; }
+    .io-box label { font-size: 10px; }
+    .io-box p { font-size: 12px; }
+    .parallel-divider { font-size: 11px; }
+    .flow-gate { font-size: 10px; }
+    .inspect-kicker { font-size: 11px; }
+    .inspector h3 { font-size: 22px; }
+    .inspector > p { font-size: 12px; }
+    .inspect-block label { font-size: 11px; }
+    .inspect-block p { font-size: 12px; }
+    .ref-list code, .accept-chain span { font-size: 10px; }
+    .review-card h3 { font-size: 16px; }
+    .review-card p { font-size: 12px; }
+    .appeal-story h3, .diff-card h3, .replay-card h3, .approval-card h3 { font-size: 18px; }
+    .appeal-story p, .diff-card p, .replay-card p, .approval-card p { font-size: 12px; }
+    .verdict strong { font-size: 13px; }
+    .verdict span { font-size: 10px; }
+    .diff-line { font-size: 12px; }
+    .replay-signal label, .replay-signal span { font-size: 10px; }
+    .replay-signal strong { font-size: 14px; }
+    .policy-rule label { font-size: 11px; }
+    .policy-rule p { font-size: 13px; }
+    .condition { font-size: 12px; }
+    .version-item b { font-size: 13px; }
+    .version-item p { font-size: 11px; }
+    .drawer-head h2 { font-size: 24px; }
+    .evidence-record label { font-size: 11px; }
+    .evidence-record code { font-size: 12px; }
+
+    /* 首页以两条 Agent 链路作为结构化监控主视图 */
+    #overview .overview-grid,
+    #overview .metric-grid,
+    #overview .agent-monitor-grid,
+    #overview .agent-card-grid,
+    #overview .legacy-agent-monitor,
+    #overview .flow-strip,
+    #overview .section-grid { display: none; }
+    .monitor-workbench { margin-bottom: 24px; padding: 20px; overflow: hidden; }
+    .monitor-workbench-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+    .monitor-workbench-head h2 { margin: 0 0 4px; font-size: 22px; }
+    .monitor-workbench-head p { margin: 0; color: var(--muted); font-size: 12px; }
+    .monitor-timebar { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; margin: 0; padding: 12px 14px; border: 1px solid var(--line-soft); border-radius: 12px; background: #f5f8f4; }
+    .monitor-timebar > strong { margin-right: 5px; font-size: 12px; }
+    .time-presets { display: flex; flex-wrap: wrap; gap: 6px; }
+    .time-button { min-height: 34px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 9px; background: #fff; color: var(--muted); cursor: pointer; font-size: 11px; font-weight: 750; }
+    .time-button:hover { border-color: #8ca092; color: var(--text); }
+    .time-button.active { border-color: var(--lime); background: #e7f0e2; color: #355d20; }
+    .custom-time { display: none; align-items: center; flex-wrap: wrap; gap: 7px; margin-left: auto; }
+    .custom-time.open { display: flex; }
+    .custom-time label { color: var(--muted); font-size: 10px; }
+    .custom-time input { min-height: 34px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 9px; background: #fff; color: var(--text); font-size: 10px; }
+    .time-summary { margin-left: auto; color: var(--muted); font-size: 10px; }
+    .monitor-flow-stack { display: grid; gap: 0; }
+    .monitor-flow-panel { padding: 22px 0; overflow: hidden; }
+    .monitor-flow-panel + .monitor-flow-panel { border-top: 1px solid var(--line); }
+    .monitor-flow-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 16px; }
+    .monitor-flow-head h2 { margin: 0 0 4px; font-size: 20px; letter-spacing: -.025em; }
+    .monitor-flow-head p { margin: 0; color: var(--muted); font-size: 12px; }
+    .monitor-flow-tag { flex: 0 0 auto; padding: 6px 9px; border: 1px solid #dfc69d; border-radius: 999px; background: #fff9ee; color: var(--amber); font-size: 10px; font-weight: 750; white-space: nowrap; }
+    .monitor-flow-scroll { overflow-x: auto; padding: 4px 2px 10px; }
+    .monitor-flow-canvas { display: flex; align-items: center; min-width: max-content; }
+    .monitor-source { display: grid; place-items: center; min-width: 92px; min-height: 42px; padding: 8px 12px; border: 1px dashed #aebdb3; border-radius: 999px; background: #f5f8f4; color: var(--muted); font-size: 11px; font-weight: 750; }
+    .monitor-arrow { position: relative; width: 52px; height: 2px; flex: 0 0 52px; margin: 0 8px; background: #94aa9c; }
+    .monitor-arrow::after { content: ""; position: absolute; right: -1px; top: -4px; width: 8px; height: 8px; border-top: 2px solid #698172; border-right: 2px solid #698172; transform: rotate(45deg); }
+    .monitor-arrow span { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); color: var(--muted); font-size: 9px; white-space: nowrap; }
+    .adjudication-flow > .monitor-arrow { width: 118px; flex-basis: 118px; }
+    .branch-arrow { width: 154px; flex-basis: 154px; }
+    .branch-arrow > span { color: var(--lime); font-weight: 800; }
+    .branch-arrow > span strong { font-size: inherit; }
+    .evidence-route { position: absolute; top: 14px; left: 50%; width: 210px; padding-top: 27px; transform: translateX(-50%); color: var(--amber); text-align: center; font-size: 10px; line-height: 1.4; }
+    .evidence-route::before { content: ""; position: absolute; top: 0; left: 50%; height: 22px; border-left: 2px solid #c39143; }
+    .evidence-route::after { content: ""; position: absolute; top: 16px; left: calc(50% - 3px); width: 6px; height: 6px; border-right: 2px solid #c39143; border-bottom: 2px solid #c39143; transform: rotate(45deg); }
+    .evidence-route b { display: block; }
+    .evidence-route small { display: block; color: var(--muted); font-size: 9px; }
+    .monitor-node { width: 270px; flex: 0 0 270px; overflow: hidden; border: 1px solid #9fb39f; border-radius: 14px; background: #fff; box-shadow: 0 8px 20px rgba(39,62,49,.06); }
+    .monitor-node-head { display: grid; grid-template-columns: 40px 1fr; gap: 11px; align-items: center; min-height: 76px; padding: 13px 14px; border-bottom: 4px solid var(--lime); background: linear-gradient(135deg, #dfead9, #edf4e9); }
+    .monitor-node-head .avatar { width: 40px; height: 40px; border-radius: 10px; background: #4f7f2e; color: #fff; font-size: 13px; }
+    .monitor-node-head b { display: block; color: #243a28; font-size: 16px; letter-spacing: -.01em; }
+    .monitor-node-head small { display: block; margin-top: 2px; color: #5a6f60; font-size: 11px; }
+    .monitor-node-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line-soft); }
+    .monitor-node-metric { min-height: 68px; padding: 10px 9px; background: #fff; }
+    .monitor-node-metric label { display: block; color: var(--muted); font-size: 10px; }
+    .monitor-node-metric strong { display: block; margin-top: 3px; font-size: 16px; line-height: 1.2; }
+    .monitor-node-metric strong.good { color: var(--lime); }
+    .monitor-node-io { display: grid; gap: 4px; padding: 9px 12px; border-bottom: 1px solid var(--line-soft); background: #f7faf6; color: var(--muted); font-size: 10px; }
+    .monitor-node-io b { display: inline-block; min-width: 32px; color: var(--text); }
+    .monitor-parallel { padding: 10px; border: 1px dashed #9fbca9; border-radius: 16px; background: #f1f7f2; }
+    .monitor-parallel-label { margin-bottom: 9px; color: var(--cyan); text-align: center; font-size: 11px; font-weight: 800; }
+    .monitor-parallel-nodes { display: flex; flex-direction: column; gap: 10px; }
+    .monitor-parallel-nodes .monitor-node { flex: 0 0 auto; }
+    .monitor-parallel-nodes .monitor-node-head { min-height: 60px; padding: 9px 12px; }
+    .monitor-parallel-nodes .monitor-node-head .avatar { width: 34px; height: 34px; }
+    .monitor-parallel-nodes .monitor-node-io { grid-template-columns: 1fr; gap: 4px; padding: 7px 10px; }
+    .monitor-parallel-nodes .monitor-node-metric { min-height: 54px; padding: 7px 8px; }
+    .monitor-exit { display: grid; gap: 7px; width: 142px; flex: 0 0 142px; }
+    .monitor-exit-main, .monitor-exit-side { padding: 8px 10px; border-radius: 9px; font-size: 10px; line-height: 1.35; }
+    .monitor-exit-main { border: 1px solid #afc7b6; background: #edf5ee; color: var(--lime); font-weight: 750; }
+    .monitor-exit-side { border: 1px dashed #cabd9e; background: #fff9ee; color: var(--amber); }
+    .monitor-human { width: 194px; flex: 0 0 194px; padding: 14px; border: 1px dashed #d0a665; border-radius: 14px; background: #fff9ee; }
+    .monitor-human b { display: block; font-size: 14px; }
+    .monitor-human span { display: block; margin-top: 4px; color: var(--amber); font-size: 11px; font-weight: 750; }
+    .monitor-human p { margin: 8px 0 0; color: var(--muted); font-size: 10px; }
+    .monitor-flow-foot { display: flex; justify-content: space-between; gap: 16px; margin: 8px 2px 0; color: var(--muted); font-size: 10px; }
+    .monitor-flow-foot strong { color: var(--text); }
+    .metric-definition { margin: 0; padding: 12px 14px; border-radius: 10px; background: #edf3ea; color: var(--muted); font-size: 11px; }
+    .metric-definition strong { color: var(--text); }
+    .column-chart { display: flex; align-items: end; gap: 16px; min-height: 180px; padding: 12px 8px 0; border-bottom: 1px solid var(--line); }
+    .column-item { flex: 1; min-width: 0; text-align: center; }
+    .column-value { display: block; margin-bottom: 7px; font-size: 14px; font-weight: 800; }
+    .column { width: min(64px, 80%); min-height: 8px; margin: auto; border-radius: 8px 8px 2px 2px; background: linear-gradient(180deg, #6f9b4d, #4f7f2e); }
+    .column.cyan { background: linear-gradient(180deg, #4da69d, #16796f); }
+    .column.amber { background: linear-gradient(180deg, #d7a254, #b07827); }
+    .column-label { display: block; min-height: 42px; margin-top: 8px; color: var(--muted); font-size: 11px; line-height: 1.3; }
+    .agent-card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .agent-monitor-card { padding: 16px; }
+    .agent-monitor-head { display: grid; grid-template-columns: 36px 1fr auto; gap: 10px; align-items: center; }
+    .agent-monitor-head .avatar { width: 34px; height: 34px; }
+    .agent-monitor-head b { display: block; font-size: 14px; }
+    .agent-monitor-head small { display: block; color: var(--muted); font-size: 11px; }
+    .agent-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 14px; }
+    .agent-stat { padding: 9px 7px; border-radius: 9px; background: #f3f6f2; }
+    .agent-stat label { display: block; color: var(--muted); font-size: 10px; }
+    .agent-stat b { display: block; margin-top: 3px; font-size: 14px; }
+    .agent-data-note { margin: 10px 0 0; color: var(--muted); font-size: 10px; }
+
+    /* 案件详情使用横向多泳道 Agent 流程图 */
+    #case-detail .org-rail, #case-detail .inspector, #case-detail .agent-flowchart { display: none; }
+    #case-detail .detail-grid { grid-template-columns: 1fr; }
+    .horizontal-flow { display: grid; gap: 18px; }
+    .flow-lane { overflow-x: auto; padding: 14px; border: 1px solid var(--line-soft); border-radius: 15px; background: #f8faf7; }
+    .lane-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 12px; }
+    .lane-head h4 { margin: 0; font-size: 16px; }
+    .lane-head span { color: var(--muted); font-size: 11px; }
+    .lane-chain { display: flex; align-items: stretch; min-width: max-content; }
+    .lane-card { width: 225px; min-height: 190px; border: 1px solid var(--line); border-radius: 12px; background: #fff; overflow: hidden; }
+    .lane-card.wide { width: 285px; }
+    .lane-card.coordinator { background: #f5f8f4; border-style: dashed; }
+    .lane-card.human { background: #fff9ee; border-color: #dfc69d; }
+    .lane-card-head { display: grid; grid-template-columns: 30px 1fr; gap: 9px; align-items: center; padding: 10px; border-bottom: 1px solid var(--line-soft); }
+    .lane-card-head .avatar { width: 28px; height: 28px; }
+    .lane-card-head b { display: block; font-size: 13px; }
+    .lane-card-head small { display: block; color: var(--muted); font-size: 10px; }
+    .lane-io { padding: 9px 10px; }
+    .lane-io + .lane-io { border-top: 1px solid var(--line-soft); background: #f9fbf8; }
+    .lane-io label { display: block; margin-bottom: 4px; color: var(--muted); font-size: 9px; letter-spacing: .08em; }
+    .lane-io p { margin: 0; font-size: 11px; line-height: 1.5; }
+    .lane-arrow { display: grid; place-items: center; width: 42px; flex: 0 0 42px; color: var(--lime); font-size: 22px; }
+    .flow-link { display: inline; margin: 0; padding: 0; border: 0; background: transparent; color: var(--cyan); font: inherit; font-weight: 750; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; cursor: pointer; }
+    .lane-trigger { padding: 6px 9px; border-radius: 999px; background: #fff1d8; color: var(--amber); font-size: 11px; font-weight: 750; }
+    .parallel-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; border: 1px dashed #a9c5b9; border-radius: 14px; background: #f1f8f4; }
+    .parallel-pair .lane-card { width: 265px; min-height: 174px; }
+    .parallel-pair-title { grid-column: 1 / -1; margin-bottom: 2px; color: var(--cyan); text-align: center; font-size: 11px; font-weight: 750; }
+    .case-flow-canvas { display: flex; align-items: center; min-width: max-content; padding: 10px 2px; }
+    .case-node { width: 324px; flex: 0 0 324px; }
+    .case-node .monitor-node-head { min-height: 72px; }
+    .case-node.human { border-color: #d0a665; }
+    .case-node.human .monitor-node-head { border-bottom-color: var(--amber); background: linear-gradient(135deg, #f3e6ca, #fff7e7); }
+    .case-node.human .monitor-node-head .avatar { background: var(--amber); }
+    .case-output-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line-soft); }
+    .case-output-item { min-height: 88px; padding: 10px; background: #fff; }
+    .case-output-item label { display: block; margin-bottom: 5px; color: var(--muted); font-size: 10px; font-weight: 750; }
+    .case-output-item p { margin: 0; font-size: 11px; line-height: 1.45; }
+    .case-output-item strong { color: var(--text); font-size: 12px; }
+    .case-input-arrow { position: relative; display: grid; place-items: center; width: 168px; min-height: 72px; flex: 0 0 168px; }
+    .case-input-arrow::before { content: ""; position: absolute; left: 12px; right: 12px; top: 50%; height: 2px; background: #94aa9c; }
+    .case-input-arrow::after { content: ""; position: absolute; right: 11px; top: calc(50% - 4px); width: 8px; height: 8px; border-top: 2px solid #698172; border-right: 2px solid #698172; transform: rotate(45deg); }
+    .case-input-arrow > span { position: relative; z-index: 1; max-width: 154px; padding: 4px 7px; background: #f8faf7; color: var(--muted); text-align: center; font-size: 10px; line-height: 1.4; }
+    .case-input-arrow > span::before { content: "输入"; display: block; color: var(--lime); font-size: 8px; font-weight: 850; letter-spacing: .1em; }
+    .case-flow-source { display: grid; place-items: center; min-width: 100px; min-height: 44px; padding: 8px 12px; border: 1px dashed #aebdb3; border-radius: 999px; background: #f1f5f1; color: var(--muted); font-size: 11px; font-weight: 750; }
+    .case-parallel { padding: 10px; border: 1px dashed #9fbca9; border-radius: 16px; background: #f1f7f2; }
+    .case-parallel-title { margin-bottom: 9px; color: var(--cyan); text-align: center; font-size: 11px; font-weight: 800; }
+    .case-parallel-nodes { display: flex; flex-direction: column; gap: 10px; }
+    .case-parallel-nodes .case-node { flex: 0 0 auto; }
+
+    @media (max-width: 1120px) {
+      .topbar { grid-template-columns: 220px 1fr auto; }
+      .detail-grid { grid-template-columns: 200px 1fr; }
+      .inspector { position: static; grid-column: 1 / -1; }
+      .overview-grid, .section-grid { grid-template-columns: 1fr; }
+      .charts-grid { grid-template-columns: minmax(0, 1.55fr) minmax(290px, 1fr); }
+      .agent-monitor-grid { grid-template-columns: 1fr 1fr; }
+      .agent-monitor-grid .chart-card:last-child { grid-column: 1 / -1; }
+      .agent-card-grid { grid-template-columns: 1fr 1fr; }
+      .agent-panel .agent-groups { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+      .policy-usage-grid { grid-template-columns: 1fr 1fr; }
+      .replay-detail-summary { grid-template-columns: repeat(3, 1fr); }
+      .replay-detail-stat.scope { grid-column: 1 / -1; }
+    }
+    @media (max-width: 800px) {
+      .topbar { height: auto; grid-template-columns: 1fr auto; gap: 10px; padding: 12px 16px; }
+      .nav { grid-column: 1 / -1; grid-row: 2; justify-content: flex-start; overflow-x: auto; }
+      .top-status .live-chip { display: none; }
+      main { padding: 18px 14px; }
+      .page-head { align-items: flex-start; flex-direction: column; }
+      .trust-row, .metric-grid { grid-template-columns: 1fr 1fr; }
+      .charts-grid { grid-template-columns: 1fr; }
+      .agent-monitor-grid { grid-template-columns: 1fr; }
+      .agent-monitor-grid .chart-card:last-child { grid-column: auto; }
+      .agent-card-grid { grid-template-columns: 1fr; }
+      .monitor-flow-head, .monitor-flow-foot { flex-direction: column; }
+      .custom-time, .time-summary { width: 100%; margin-left: 0; }
+      .flow-strip { grid-template-columns: repeat(3, 1fr); }
+      .flow-step { border-bottom: 1px solid var(--line-soft); border-radius: 0 !important; }
+      .detail-grid { grid-template-columns: 1fr; }
+      .org-rail { order: 2; }
+      .process { order: 1; }
+      .inspector { order: 3; }
+      .review-layout, .review-evidence { grid-template-columns: 1fr; }
+      .approval-compare { grid-template-columns: 1fr; }
+      .approval-context { align-items: flex-start; flex-direction: column; }
+      .approval-context .verdict-shift { width: 100%; flex-basis: auto; }
+      .replay-detail-summary { grid-template-columns: 1fr 1fr; }
+      .policy-layout { grid-template-columns: 1fr; }
+      .policy-detail-primary, .policy-detail-secondary { grid-template-columns: 1fr; }
+      .diff-card, .replay-card, .approval-card { grid-column: 1; grid-row: auto; }
+      .toolbar { grid-template-columns: 1fr; }
+      .table-pagination { align-items: flex-start; flex-direction: column; }
+      .pagination-controls { flex-wrap: wrap; }
+    }
+    @media (max-width: 520px) {
+      .brand small { display: none; }
+      .top-status { display: none; }
+      .topbar { grid-template-columns: 1fr; }
+      .nav { grid-column: 1; }
+      .hero-panel { padding: 20px; }
+      .trust-row, .metric-grid, .parallel-grid, .branch-grid, .replay-columns { grid-template-columns: 1fr; }
+      .impact-numbers, .rule-before-after { grid-template-columns: 1fr; }
+      .replay-scope, .replay-result-split, .replay-direction { grid-template-columns: 1fr; }
+      .replay-detail-summary { grid-template-columns: 1fr; }
+      .replay-detail-stat.scope { grid-column: auto; }
+      .parallel-agents { grid-template-columns: 1fr; }
+      .parallel-pair { grid-template-columns: 1fr; }
+      .parallel-pair-title { grid-column: 1; }
+      .parallel-divider { writing-mode: horizontal-tb; }
+      .io-grid { grid-template-columns: 1fr; }
+      .io-box + .io-box { border-left: 0; border-top: 1px solid var(--line-soft); }
+      .flow-strip { grid-template-columns: 1fr 1fr; }
+      .agent-panel .agent-groups { grid-template-columns: 1fr; }
+      .policy-logic-columns, .policy-usage-grid { grid-template-columns: 1fr; }
+      .approval-card { align-items: stretch; flex-direction: column; }
+      .approval-actions { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"></div>
+        <div><strong>JudgeFlow</strong><small>多智能体决策治理</small></div>
+      </div>
+      <nav class="nav" aria-label="主导航">
+        <button class="active" data-view="overview">运行监控</button>
+        <button data-view="cases">案件中心</button>
+        <button data-view="policies">规则中心</button>
+        <button data-view="review">人工审批</button>
+      </nav>
+      <div class="top-status">
+        <span class="mock-chip">产品开发样本</span>
+        <span class="live-chip">静态原型 · 前后端未接入</span>
+        <button class="pending-chip" data-view="review">模拟待处理 <b>12</b></button>
+      </div>
+    </header>
+
+    <main>
+      <section id="overview" class="view active">
+        <div class="page-head">
+          <div>
+            <p class="eyebrow">运行总览 · DEMO-STAGE6-LIVE-001</p>
+            <h1>决策运行总览</h1>
+            <p>多智能体分权审议，程序验收正式产物；决策可申诉、错误可归因，候选规则不能自动发布。</p>
+          </div>
+          <div class="mode"><span>展示模式</span><strong>已完成记录回放</strong></div>
+        </div>
+
+        <section class="panel monitor-workbench" aria-label="链路结构与性能监控">
+          <div class="monitor-workbench-head">
+            <div><h2>链路结构与性能监控</h2><p>统一选择事件范围，同时观察裁决主链和条件触发的规则演进链。</p></div>
+            <span class="monitor-flow-tag">模拟监控数据</span>
+          </div>
+        <div class="monitor-timebar" aria-label="链路事件时间筛选">
+          <strong>链路事件范围</strong>
+          <div class="time-presets">
+            <button class="time-button" data-hours="1">过去 1 小时</button>
+            <button class="time-button active" data-hours="24">过去 24 小时</button>
+            <button class="time-button" data-hours="72">过去 3 天</button>
+            <button class="time-button" data-hours="168">过去 7 天</button>
+            <button class="time-button" id="custom-time-toggle">自定义时间</button>
+          </div>
+          <div class="custom-time" id="custom-time-fields">
+            <label>开始 <input id="custom-time-start" type="datetime-local" aria-label="自定义开始时间"></label>
+            <label>结束 <input id="custom-time-end" type="datetime-local" aria-label="自定义结束时间"></label>
+            <button class="time-button" id="apply-custom-time">应用</button>
+          </div>
+          <span class="time-summary" id="time-summary">当前展示：过去 24 小时</span>
+        </div>
+
+        <div class="monitor-flow-stack" aria-label="JudgeFlow 两条 Agent 执行链路监控">
+          <article class="monitor-flow-panel">
+            <div class="monitor-flow-head">
+              <div><h2>裁决链路</h2><p>调查取证后，风险研判与反证审查并行独立工作；两份正式产物均通过程序验收后，才进入独立裁决。</p></div>
+              <span class="monitor-flow-tag">模拟监控数据 · <span class="time-range-label">过去 24 小时</span></span>
+            </div>
+            <div class="monitor-flow-scroll"><div class="monitor-flow-canvas adjudication-flow">
+              <div class="monitor-source">案件进入</div><div class="monitor-arrow"><span>创建任务单</span></div>
+              <article class="monitor-node">
+                <div class="monitor-node-head"><i class="avatar">调</i><div><b>调查取证 Agent</b><small>证据与规则检索</small></div></div>
+                <div class="monitor-node-metrics"><div class="monitor-node-metric"><label class="volume-label">任务流量</label><strong data-base24="240">240</strong></div><div class="monitor-node-metric"><label>平均响应时间</label><strong>1.8 秒</strong></div><div class="monitor-node-metric"><label>产物验收通过率</label><strong class="good">99.6%</strong></div></div>
+              </article>
+              <div class="monitor-arrow"><span>证据产物</span></div>
+              <div class="monitor-parallel"><div class="monitor-parallel-label">独立并行审议 · 输入互相隔离</div><div class="monitor-parallel-nodes">
+                <article class="monitor-node">
+                  <div class="monitor-node-head"><i class="avatar">险</i><div><b>风险研判 Agent</b><small>支持违规风险意见</small></div></div>
+                  <div class="monitor-node-io"><span><b>输入</b>已验收证据包 + 锁定规则快照</span><span><b>输出</b>独立风险意见</span></div>
+                  <div class="monitor-node-metrics"><div class="monitor-node-metric"><label class="volume-label">任务流量</label><strong data-base24="218">218</strong></div><div class="monitor-node-metric"><label>平均响应时间</label><strong>1.2 秒</strong></div><div class="monitor-node-metric"><label>产物验收通过率</label><strong class="good">99.5%</strong></div></div>
+                </article>
+                <article class="monitor-node">
+                  <div class="monitor-node-head"><i class="avatar">证</i><div><b>反证审查 Agent</b><small>寻找例外与反证</small></div></div>
+                  <div class="monitor-node-io"><span><b>输入</b>已验收证据包 + 锁定规则快照</span><span><b>输出</b>独立反证意见</span></div>
+                  <div class="monitor-node-metrics"><div class="monitor-node-metric"><label class="volume-label">任务流量</label><strong data-base24="218">218</strong></div><div class="monitor-node-metric"><label>平均响应时间</label><strong>1.3 秒</strong></div><div class="monitor-node-metric"><label>产物验收通过率</label><strong class="good">99.1%</strong></div></div>
+                </article>
+              </div></div>
+              <div class="monitor-arrow"><span>双产物验收</span></div>
+              <article class="monitor-node">
+                <div class="monitor-node-head"><i class="avatar">裁</i><div><b>独立裁决 Agent</b><small>综合独立意见裁决</small></div></div>
+                <div class="monitor-node-metrics"><div class="monitor-node-metric"><label class="volume-label">任务流量</label><strong data-base24="218">218</strong></div><div class="monitor-node-metric"><label>平均响应时间</label><strong>1.5 秒</strong></div><div class="monitor-node-metric"><label>产物验收通过率</label><strong class="good">99.6%</strong></div></div>
+              </article>
+            </div></div>
+            <div class="monitor-flow-foot"><span><strong>结构信号：</strong>两者共享同一份事实底座，但各自独立运行，互相看不到对方提交的意见。</span><span>输出汇合后才创建裁决任务单</span></div>
+          </article>
+
+          <article class="monitor-flow-panel">
+            <div class="monitor-flow-head">
+              <div><h2>规则演进链路</h2><p>只有申诉改判且归因为规则缺口的案件才进入规则编写与确定性回放；最终人工批准也不会自动发布生产规则。</p></div>
+              <span class="monitor-flow-tag">模拟监控数据 · <span class="time-range-label">过去 24 小时</span></span>
+            </div>
+            <div class="monitor-flow-scroll"><div class="monitor-flow-canvas">
+              <div class="monitor-source">申诉进入</div><div class="monitor-arrow"><span>冻结快照</span></div>
+              <article class="monitor-node">
+                <div class="monitor-node-head"><i class="avatar">诉</i><div><b>申诉重审 Agent</b><small>仅看白名单新证据</small></div></div>
+                <div class="monitor-node-metrics"><div class="monitor-node-metric"><label class="volume-label">任务流量</label><strong data-base24="67">67</strong></div><div class="monitor-node-metric"><label>平均响应时间</label><strong>1.7 秒</strong></div><div class="monitor-node-metric"><label>产物验收通过率</label><strong class="good">98.5%</strong></div></div>
+              </article>
+              <div class="monitor-arrow"><span>改判产物</span></div>
+              <article class="monitor-node">
+                <div class="monitor-node-head"><i class="avatar">因</i><div><b>问题归因 Agent</b><small>区分规则与证据缺口</small></div></div>
+                <div class="monitor-node-metrics"><div class="monitor-node-metric"><label class="volume-label">任务流量</label><strong data-base24="41">41</strong></div><div class="monitor-node-metric"><label>平均响应时间</label><strong>1.1 秒</strong></div><div class="monitor-node-metric"><label>产物验收通过率</label><strong class="good">100%</strong></div></div>
+              </article>
+              <div class="monitor-arrow branch-arrow">
+                <span>规则缺口 · <strong data-base24="18">18</strong> 件</span>
+                <div class="evidence-route"><b>证据缺口 · <strong data-base24="23">23</strong> 件 · 终点</b><small>案件已纠正 · 规则不变 · 流程关闭</small></div>
+              </div>
+              <article class="monitor-node">
+                <div class="monitor-node-head"><i class="avatar">规</i><div><b>规则编写 Agent</b><small>只生成候选规则</small></div></div>
+                <div class="monitor-node-metrics"><div class="monitor-node-metric"><label class="volume-label">任务流量</label><strong data-base24="18">18</strong></div><div class="monitor-node-metric"><label>平均响应时间</label><strong>1.9 秒</strong></div><div class="monitor-node-metric"><label>产物验收通过率</label><strong class="good">100%</strong></div></div>
+              </article>
+              <div class="monitor-arrow"><span>候选规则</span></div>
+              <article class="monitor-node">
+                <div class="monitor-node-head"><i class="avatar">放</i><div><b>回放分析 Agent</b><small>解释程序回放结果</small></div></div>
+                <div class="monitor-node-metrics"><div class="monitor-node-metric"><label class="volume-label">任务流量</label><strong data-base24="18">18</strong></div><div class="monitor-node-metric"><label>平均响应时间</label><strong>0.8 秒</strong></div><div class="monitor-node-metric"><label>产物验收通过率</label><strong class="good">100%</strong></div></div>
+              </article>
+              <div class="monitor-arrow"><span>回放报告</span></div>
+              <div class="monitor-human"><b>人工审批</b><span>1 项待确认</span><p>只记录比赛审批结果；不可变基线保持原版本，不自动发布候选规则。</p></div>
+            </div></div>
+            <div class="monitor-flow-foot"><span><strong>治理信号：</strong>非规则问题在归因节点停止，规则问题才允许继续。</span><span>回放指标由 Python 确定性计算，不由智能体生成</span></div>
+          </article>
+          <p class="metric-definition"><strong>产物验收通过率：</strong>通过 Kernel Schema 验收的正式产物数 ÷ Agent 提交的正式产物总数。它反映输出是否满足结构、引用和字段约束，不代表裁决结论一定正确。</p>
+        </div>
+        </section>
+
+        <div class="overview-grid">
+          <article class="panel hero-panel">
+            <div class="hero-top">
+              <div>
+                <p class="eyebrow">当前治理主线</p>
+                <h2>一宗误判，正在推动一条<span>更清晰但尚未发布</span>的候选规则。</h2>
+                <p>原裁决已被新增白名单证据推翻。归因结果为规则缺口，候选规则完成确定性回放，当前等待规则负责人审批。</p>
+              </div>
+            </div>
+            <div class="trust-row">
+              <div class="trust"><b><i class="check">✓</i>规则快照已锁定</b><span>MINOR_DANGEROUS_ACT · 1.0</span></div>
+              <div class="trust"><b><i class="check">✓</i>正式产物已验收</b><span>11 张任务单 · 10 份正式产物</span></div>
+              <div class="trust"><b><i class="check">✓</i>生产规则未发布</b><span>候选版本与基线版本并存</span></div>
+            </div>
+            <div class="hero-action">
+              <button class="primary" data-open-case="CASE-STAGE6-LIVE-001">查看主案件</button>
+              <button class="secondary" data-view="review">处理人工审批</button>
+            </div>
+          </article>
+
+          <aside class="panel agent-panel">
+            <div class="panel-title"><h3>AgentTeams 组织状态</h3><span>12 个资源</span></div>
+            <div class="agent-groups">
+              <div class="agent-group">
+                <div class="group-label"><span>总控协调</span><span>只路由</span></div>
+                <div class="agent-row"><i class="avatar">M</i><strong>总控 Manager</strong><span class="state running">运行中</span></div>
+              </div>
+              <div class="agent-group">
+                <div class="group-label"><span>案件裁决团队</span><span>4 个领域 Agent</span></div>
+                <div class="agent-row"><i class="avatar">TL</i><strong>裁决 Team Leader</strong><span class="state">休眠</span></div>
+                <div class="agent-row"><i class="avatar">4</i><strong>调查、风险、反证、裁决</strong><span class="state">休眠</span></div>
+              </div>
+              <div class="agent-group">
+                <div class="group-label"><span>规则团队与人工</span><span>4 个资源</span></div>
+                <div class="agent-row"><i class="avatar">3</i><strong>归因、规则、回放 Agent</strong><span class="state">休眠</span></div>
+                <div class="agent-row"><i class="avatar">H</i><strong>规则负责人</strong><span class="state active">可处理</span></div>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <div class="monitor-heading"><div><h2>业务维度监控</h2><p>案件结果趋势与不同规则命中占比</p></div><span>原型示例数据 · 待接只读投影</span></div>
+        <div class="panel monitor-timebar business-timebar" aria-label="业务监控时间筛选">
+          <strong>业务数据范围</strong>
+          <div class="time-presets">
+            <button class="time-button" data-business-hours="1">过去 1 小时</button>
+            <button class="time-button active" data-business-hours="24">过去 24 小时</button>
+            <button class="time-button" data-business-hours="72">过去 3 天</button>
+            <button class="time-button" data-business-hours="168">过去 7 天</button>
+            <button class="time-button" id="business-custom-time-toggle">自定义时间</button>
+          </div>
+          <div class="custom-time" id="business-custom-time-fields">
+            <label>开始 <input id="business-custom-time-start" type="datetime-local" aria-label="业务监控自定义开始时间"></label>
+            <label>结束 <input id="business-custom-time-end" type="datetime-local" aria-label="业务监控自定义结束时间"></label>
+            <button class="time-button" id="apply-business-custom-time">应用</button>
+          </div>
+          <span class="time-summary" id="business-time-summary">当前展示：过去 24 小时</span>
+        </div>
+        <div class="metric-grid">
+          <article class="panel metric"><span class="label">本次案件</span><strong>3</strong><small class="good">2 个已裁决 · 1 个调查中</small></article>
+          <article class="panel metric"><span class="label">正式产物</span><strong>18</strong><small>全部经 Kernel 结构验收</small></article>
+          <article class="panel metric"><span class="label">待人工审批</span><strong>1</strong><small class="good">规则草案与回放已绑定</small></article>
+          <article class="panel metric"><span class="label">明确失败</span><strong>1</strong><small>TIMEOUT ≠ 业务无数据</small></article>
+        </div>
+
+        <div class="charts-grid">
+          <article class="panel chart-card">
+            <div class="panel-title"><h3>案件结果趋势</h3><span id="business-line-range">过去 24 小时 · 按最终裁决类型</span></div>
+            <div class="line-chart-wrap"><canvas id="business-line-chart" aria-label="案件结果趋势折线图"></canvas></div>
+            <div class="line-chart-legend"><strong class="legend-caption">图例 · 区间总量</strong><span><i></i>违规 <b data-line-total="0">86</b></span><span><i class="cyan"></i>不违规 <b data-line-total="1">61</b></span><span><i class="amber"></i>证据不足 <b data-line-total="2">22</b></span><span><i class="red"></i>申诉改判 <b data-line-total="3">14</b></span></div>
+            <p class="chart-foot">结果类型来自 DecisionRecord 与 AppealDecision，不把工具失败当作业务结论。</p>
+          </article>
+
+          <article class="panel chart-card">
+            <div class="panel-title"><h3>规则命中占比</h3><span id="business-pie-range">过去 24 小时</span></div>
+            <div class="policy-pie-layout">
+              <div class="policy-pie" id="business-policy-pie"><strong id="business-policy-total">286<small>命中总次数</small></strong></div>
+              <div class="policy-pie-legend">
+                <div class="legend-item"><i></i><span>未成年人危险行为</span><b data-policy-base="86">86</b></div>
+                <div class="legend-item"><i class="cyan"></i><span>危险模仿行为</span><b data-policy-base="62">62</b></div>
+                <div class="legend-item"><i class="amber"></i><span>受控教学场景例外</span><b data-policy-base="47">47</b></div>
+                <div class="legend-item"><i class="red"></i><span>高风险工具展示</span><b data-policy-base="33">33</b></div>
+                <div class="legend-item"><i style="background:#6f91b6"></i><span>安全科普例外</span><b data-policy-base="23">23</b></div>
+                <div class="legend-item"><i style="background:#a8b3ac"></i><span>其他规则</span><b data-policy-base="35">35</b></div>
+              </div>
+            </div>
+            <p class="chart-foot">同一案件可命中多条规则，因此命中总次数不等于案件数。</p>
+          </article>
+
+        </div>
+
+        <div class="monitor-heading legacy-agent-monitor"><div><h2>Agent 维度监控</h2><p>每个 Agent 独立展示生命周期、任务、成功率、耗时与 Token</p></div><span>Token 未接入时必须显示“—”</span></div>
+        <div class="agent-monitor-grid">
+          <article class="panel chart-card">
+            <div class="panel-title"><h3>AgentTeams 生命周期</h3><span>资源状态快照</span></div>
+            <div class="agent-chart">
+              <div class="stacked-bar" aria-label="1 个运行中，10 个休眠，1 个人工资源可处理"><span class="run">1</span><span class="sleep">10</span><span class="human">1</span></div>
+              <div class="legend-list">
+                <div class="legend-item"><i></i><span>运行中</span><b>1</b></div>
+                <div class="legend-item"><i style="background:#8fa198"></i><span>休眠</span><b>10</b></div>
+                <div class="legend-item"><i class="cyan"></i><span>人工可处理</span><b>1</b></div>
+              </div>
+            </div>
+            <p class="chart-foot">Agent 生命周期与任务单状态分开展示，避免把“休眠”误解成“未执行”。</p>
+          </article>
+
+          <article class="panel chart-card">
+            <div class="panel-title"><h3>领域 Agent 任务负载</h3><span>按已验收正式产物统计</span></div>
+            <div class="bar-chart">
+              <div class="bar-row"><label>调查取证</label><div class="bar-track"><div class="bar-fill" style="width:50%"></div></div><b>1</b></div>
+              <div class="bar-row"><label>风险研判</label><div class="bar-track"><div class="bar-fill cyan" style="width:50%"></div></div><b>1</b></div>
+              <div class="bar-row"><label>反证审查</label><div class="bar-track"><div class="bar-fill cyan" style="width:50%"></div></div><b>1</b></div>
+              <div class="bar-row"><label>申诉重审</label><div class="bar-track"><div class="bar-fill amber" style="width:100%"></div></div><b>2</b></div>
+              <div class="bar-row"><label>问题归因</label><div class="bar-track"><div class="bar-fill amber" style="width:100%"></div></div><b>2</b></div>
+            </div>
+            <p class="chart-foot">成功率和耗时可由 WorkOrder 状态与时间戳计算；此处先展示固定链路负载。</p>
+          </article>
+
+          <article class="panel chart-card">
+            <div class="panel-title"><h3>模型用量与性能</h3><span>数据接入状态</span></div>
+            <div class="token-empty"><div><strong>—</strong><b>暂无可信 Token 数据</b><p>当前正式数据模型没有记录提示词 Token、输出 Token 或模型费用，原型不编造数值。</p></div></div>
+            <div class="token-fields"><span>输入 Token：—</span><span>输出 Token：—</span><span>模型费用：—</span></div>
+            <p class="chart-foot">执行时长可由任务单时间戳派生；Token 需从现有模型运行遥测做只读投影。</p>
+          </article>
+        </div>
+
+        <div class="agent-card-grid">
+          <article class="panel agent-monitor-card"><div class="agent-monitor-head"><i class="avatar">M</i><div><b>总控 Manager</b><small>judgeflow-manager</small></div><span class="state running">运行中</span></div><div class="agent-stats"><div class="agent-stat"><label>路由任务</label><b>11</b></div><div class="agent-stat"><label>路由失败</label><b>0</b></div><div class="agent-stat"><label>平均耗时</label><b>—</b></div><div class="agent-stat"><label>输入 Token</label><b>—</b></div><div class="agent-stat"><label>输出 Token</label><b>—</b></div><div class="agent-stat"><label>领域产物</label><b>0</b></div></div><p class="agent-data-note">协调 Agent，不允许生成领域 Artifact。</p></article>
+          <article class="panel agent-monitor-card"><div class="agent-monitor-head"><i class="avatar">TL</i><div><b>裁决 Team Leader</b><small>adjudication-team-leader</small></div><span class="state">休眠</span></div><div class="agent-stats"><div class="agent-stat"><label>派发任务</label><b>4</b></div><div class="agent-stat"><label>派发失败</label><b>0</b></div><div class="agent-stat"><label>平均耗时</label><b>—</b></div><div class="agent-stat"><label>输入 Token</label><b>—</b></div><div class="agent-stat"><label>输出 Token</label><b>—</b></div><div class="agent-stat"><label>领域产物</label><b>0</b></div></div><p class="agent-data-note">只负责任务顺序与唤醒，不作案件判断。</p></article>
+          <article class="panel agent-monitor-card"><div class="agent-monitor-head"><i class="avatar">TL</i><div><b>规则 Team Leader</b><small>policy-evolution-team-leader</small></div><span class="state">休眠</span></div><div class="agent-stats"><div class="agent-stat"><label>派发任务</label><b>3</b></div><div class="agent-stat"><label>派发失败</label><b>0</b></div><div class="agent-stat"><label>平均耗时</label><b>—</b></div><div class="agent-stat"><label>输入 Token</label><b>—</b></div><div class="agent-stat"><label>输出 Token</label><b>—</b></div><div class="agent-stat"><label>领域产物</label><b>0</b></div></div><p class="agent-data-note">只负责任务顺序与审批提醒。</p></article>
+          <article class="panel agent-monitor-card"><div class="agent-monitor-head"><i class="avatar">I</i><div><b>调查取证 Agent</b><small>case-investigator</small></div><span class="state">休眠</span></div><div class="agent-stats"><div class="agent-stat"><label>任务数</label><b>1</b></div><div class="agent-stat"><label>成功率</label><b>100%</b></div><div class="agent-stat"><label>平均耗时</label><b>1.8s</b></div><div class="agent-stat"><label>输入 Token</label><b>—</b></div><div class="agent-stat"><label>输出 Token</label><b>—</b></div><div class="agent-stat"><label>失败数</label><b>0</b></div></div><p class="agent-data-note">Token 暂无可信遥测，不展示估算值。</p></article>
+          <article class="panel agent-monitor-card"><div class="agent-monitor-head"><i class="avatar">R</i><div><b>风险研判 Agent</b><small>risk-prosecutor</small></div><span class="state">休眠</span></div><div class="agent-stats"><div class="agent-stat"><label>任务数</label><b>1</b></div><div class="agent-stat"><label>成功率</label><b>100%</b></div><div class="agent-stat"><label>平均耗时</label><b>1.2s</b></div><div class="agent-stat"><label>输入 Token</label><b>—</b></div><div class="agent-stat"><label>输出 Token</label><b>—</b></div><div class="agent-stat"><label>失败数</label><b>0</b></div></div><p class="agent-data-note">与反证 Agent 使用不同 WorkOrder 和 run。</p></article>
+          <article class="panel agent-monitor-card"><div class="agent-monitor-head"><i class="avatar">C</i><div><b>反证审查 Agent</b><small>counter-reviewer</small></div><span class="state">休眠</span></div><div class="agent-stats"><div class="agent-stat"><label>任务数</label><b>1</b></div><div class="agent-stat"><label>成功率</label><b>100%</b></div><div class="agent-stat"><label>平均耗时</label><b>1.3s</b></div><div class="agent-stat"><label>输入 Token</label><b>—</b></div><div class="agent-stat"><label>输出 Token</label><b>—</b></div><div class="agent-stat"><label>失败数</label><b>0</b></div></div><p class="agent-data-note">输入不包含风险意见，保持反证独立。</p></article>
+          <article class="panel agent-monitor-card"><div class="agent-monitor-head"><i class="avatar">J</i><div><b>独立裁决 Agent</b><small>independent-judge</small></div><span class="state">休眠</span></div><div class="agent-stats"><div class="agent-stat"><label>任务数</label><b>1</b></div><div class="agent-stat"><label>成功率</label><b>100%</b></div><div class="agent-stat"><label>平均耗时</label><b>1.5s</b></div><div class="agent-stat"><label>输入 Token</label><b>—</b></div><div class="agent-stat"><label>输出 Token</label><b>—</b></div><div class="agent-stat"><label>失败数</label><b>0</b></div></div><p class="agent-data-note">两份独立意见验收后才创建任务。</p></article>
+          <article class="panel agent-monitor-card"><div class="agent-monitor-head"><i class="avatar">A</i><div><b>申诉重审 Agent</b><small>appeal-reviewer</small></div><span class="state">休眠</span></div><div class="agent-stats"><div class="agent-stat"><label>任务数</label><b>2</b></div><div class="agent-stat"><label>成功率</label><b>100%</b></div><div class="agent-stat"><label>平均耗时</label><b>1.7s</b></div><div class="agent-stat"><label>输入 Token</label><b>—</b></div><div class="agent-stat"><label>输出 Token</label><b>—</b></div><div class="agent-stat"><label>改判数</label><b>2</b></div></div><p class="agent-data-note">只读冻结快照与白名单新增证据。</p></article>
+          <article class="panel agent-monitor-card"><div class="agent-monitor-head"><i class="avatar">AT</i><div><b>问题归因 Agent</b><small>case-attributor</small></div><span class="state">休眠</span></div><div class="agent-stats"><div class="agent-stat"><label>任务数</label><b>2</b></div><div class="agent-stat"><label>成功率</label><b>100%</b></div><div class="agent-stat"><label>平均耗时</label><b>1.1s</b></div><div class="agent-stat"><label>规则缺口</label><b>1</b></div><div class="agent-stat"><label>证据缺口</label><b>1</b></div><div class="agent-stat"><label>失败数</label><b>0</b></div></div><p class="agent-data-note">决定是否允许进入规则演进链路。</p></article>
+          <article class="panel agent-monitor-card"><div class="agent-monitor-head"><i class="avatar">P</i><div><b>规则编写 Agent</b><small>policy-author</small></div><span class="state">休眠</span></div><div class="agent-stats"><div class="agent-stat"><label>任务数</label><b>1</b></div><div class="agent-stat"><label>成功率</label><b>100%</b></div><div class="agent-stat"><label>平均耗时</label><b>1.9s</b></div><div class="agent-stat"><label>输入 Token</label><b>—</b></div><div class="agent-stat"><label>输出 Token</label><b>—</b></div><div class="agent-stat"><label>候选版本</label><b>1</b></div></div><p class="agent-data-note">不能读取评分集，也不能发布规则。</p></article>
+          <article class="panel agent-monitor-card"><div class="agent-monitor-head"><i class="avatar">RP</i><div><b>回放分析 Agent</b><small>replay-analyst</small></div><span class="state">休眠</span></div><div class="agent-stats"><div class="agent-stat"><label>任务数</label><b>1</b></div><div class="agent-stat"><label>成功率</label><b>100%</b></div><div class="agent-stat"><label>平均耗时</label><b>0.8s</b></div><div class="agent-stat"><label>输入 Token</label><b>—</b></div><div class="agent-stat"><label>输出 Token</label><b>—</b></div><div class="agent-stat"><label>回放数</label><b>1</b></div></div><p class="agent-data-note">指标由 Python 计算，Agent 只解释结果。</p></article>
+        </div>
+
+        <div class="panel flow-strip" aria-label="当前治理链路">
+          <div class="flow-step"><span>01</span><b>调查取证</b><em>已验收</em></div>
+          <div class="flow-step"><span>02</span><b>风险 / 反证</b><em>2 份独立产物</em></div>
+          <div class="flow-step"><span>03</span><b>独立裁决</b><em>已裁决</em></div>
+          <div class="flow-step"><span>04</span><b>申诉重审</b><em>已改判</em></div>
+          <div class="flow-step"><span>05</span><b>规则归因与回放</b><em>证据不足以定论</em></div>
+          <div class="flow-step current"><span>06 · 当前</span><b>人工审批</b><em>等待确认</em></div>
+        </div>
+
+        <div class="section-grid">
+          <article class="panel activity">
+            <div class="panel-title"><h3>最近正式事件</h3><span>来自任务单、正式产物与领域事件</span></div>
+            <div class="event"><time>10:21:09</time><i class="event-dot"></i><div><b>回放报告已通过 Kernel 验收</b><p>回放分析 Agent · ART-WO-STAGE6-LIVE-001-RP</p></div></div>
+            <div class="event"><time>10:21:08</time><i class="event-dot"></i><div><b>确定性回放完成</b><p>触发样本已纠正；评分集 n=1，未观察到新增误伤或漏放</p></div></div>
+            <div class="event"><time>10:21:06</time><i class="event-dot"></i><div><b>候选规则作为不可变版本写入</b><p>MINOR_DANGEROUS_ACT · 2.0-demo-live-001 · 候选版本</p></div></div>
+          </article>
+          <aside class="panel governance">
+            <div class="panel-title"><h3>治理门</h3><span>1 项待处理</span></div>
+            <div class="gate">
+              <strong><span>等待规则负责人</span><span>证据不足以定论</span></strong>
+              <p>审批绑定具体规则草案和回放记录。“批准”只记录比赛结果，不替换基线规则。</p>
+              <button class="primary" data-view="review">进入人工审批</button>
+            </div>
+            <p class="tiny-note">非规则分支：证据缺口 → 已关闭，正确停止且下游任务为 0。</p>
+          </aside>
+        </div>
+      </section>
+
+      <section id="cases" class="view">
+        <div class="page-head">
+          <div>
+            <p class="eyebrow">当前演示数据范围</p>
+            <h1>案件中心</h1>
+            <p>按案件编号、综合状态和相关规则检索本次比赛 Demo 案件。</p>
+          </div>
+          <div class="mode"><span>数据范围</span><strong>DEMO-STAGE6-LIVE-001</strong></div>
+        </div>
+        <div class="toolbar">
+          <input id="case-search" class="search" type="search" placeholder="检索案件编号、摘要、状态或规则…" aria-label="检索案件">
+          <select id="case-filter" class="filter" aria-label="按状态筛选">
+            <option value="ALL">全部状态</option>
+            <option value="调查中">调查中</option>
+            <option value="正反审议中">正反审议中</option>
+            <option value="已裁决">已裁决</option>
+            <option value="申诉中">申诉中</option>
+            <option value="申诉改判">申诉改判</option>
+            <option value="维持原判">维持原判</option>
+            <option value="规则演进中">规则演进中</option>
+            <option value="待人工确认">待人工确认</option>
+            <option value="已关闭">已关闭</option>
+            <option value="执行失败">执行失败</option>
+          </select>
+          <select id="case-policy-filter" class="filter" aria-label="按相关规则筛选">
+            <option value="ALL">全部规则</option>
+            <option value="未成年人危险行为">未成年人危险行为</option>
+            <option value="危险模仿行为">危险模仿行为</option>
+            <option value="受控教学场景例外">受控教学场景例外</option>
+            <option value="监护人陪同例外">监护人陪同例外</option>
+            <option value="高风险工具展示">高风险工具展示</option>
+            <option value="危险挑战传播">危险挑战传播</option>
+            <option value="专业训练场景例外">专业训练场景例外</option>
+            <option value="安全科普内容例外">安全科普内容例外</option>
+            <option value="未成年人保护原则">未成年人保护原则</option>
+            <option value="证据不足裁决原则">证据不足裁决原则</option>
+            <option value="重复危险行为">重复危险行为</option>
+            <option value="公共场所危险行为">公共场所危险行为</option>
+          </select>
+          <button class="secondary" id="clear-search">清除筛选</button>
+        </div>
+        <div class="panel table-panel">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>案件</th><th>案件状态</th><th>相关规则</th><th>创建时间</th><th>更新时间</th></tr></thead>
+              <tbody id="case-rows">
+                <tr data-case="CASE-STAGE6-LIVE-001" data-status="待人工确认" data-policies="未成年人危险行为" data-search="case-stage6-live-001 待人工确认 未成年人危险行为">
+                  <td><span class="case-code">CASE-STAGE6-LIVE-001</span><span class="sub">未成年人危险行为 · 主演示案件</span></td>
+                  <td><span class="badge amber">待人工确认</span></td><td><div class="policy-link-list"><button class="policy-cell-link" data-policy-link data-policy-title="未成年人危险行为" data-policy-id="MINOR_DANGEROUS_ACT" title="MINOR_DANGEROUS_ACT">未成年人危险行为</button></div></td><td>2026-08-13 09:42:18</td><td>2026-08-15 10:21:09</td>
+                </tr>
+                <tr id="empty-row" class="empty-row"><td colspan="5">没有符合条件的案件</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-pagination" aria-label="案件列表分页">
+            <span id="case-page-summary">第 1–20 条，共 240 条</span>
+            <div class="pagination-controls"><button id="case-page-prev" aria-label="上一页">上一页</button><span id="case-page-numbers"></span><button id="case-page-next" aria-label="下一页">下一页</button></div>
+            <label class="pagination-size">每页 <select id="case-page-size"><option value="20">20 条</option><option value="50">50 条</option><option value="100">100 条</option></select></label>
+          </div>
+        </div>
+      </section>
+
+      <section id="case-detail" class="view">
+        <div class="detail-head">
+          <button class="back" id="case-detail-back" data-view="cases">← 返回案件中心</button>
+          <div class="case-title">
+            <h1 id="detail-case-id">CASE-STAGE6-LIVE-001</h1>
+            <span id="detail-badges"><span class="badge green">已裁决</span> <span class="badge cyan">已改判</span> <span class="badge amber">规则缺口</span> <span class="badge red">尚未发布</span></span>
+          </div>
+          <div class="case-meta"><span id="detail-case-summary">固定案件：未成年人危险行为视频</span><span>规则快照 <code id="detail-policy-version">1.0 · 已锁定</code></span><span>追踪编号 <code id="detail-trace-id">TRACE-STAGE6-LIVE-001</code></span><span>模式 <code>记录回放</code></span></div>
+        </div>
+
+        <div class="detail-grid">
+          <aside class="panel org-rail">
+            <div class="panel-title"><h3>组织与职责</h3><span>权力隔离</span></div>
+            <div class="org-node"><b><span>总控 Manager</span><span class="state running">运行中</span></b><p>只路由任务单编号，不生成领域产物</p></div>
+            <div class="org-node"><b><span>案件裁决团队</span><span class="state">休眠</span></b><p>Leader、调查、风险、反证与独立裁决</p></div>
+            <div class="org-node"><b><span>申诉重审 Agent</span><span class="state">休眠</span></b><p>只读冻结快照与白名单新增证据</p></div>
+            <div class="org-node"><b><span>规则演进团队</span><span class="state">休眠</span></b><p>问题归因、规则编写与回放分析</p></div>
+            <div class="org-node"><b><span>规则负责人</span><span class="state active">可处理</span></b><p>审批候选版本，不发布生产规则</p></div>
+            <div class="org-node dim"><b><span>PostgreSQL</span><span>业务真源</span></b><p>任务单、正式产物与业务状态的唯一真源</p></div>
+          </aside>
+
+          <section class="panel process">
+            <div class="process-header"><h3>Agent 执行流程图</h3><span>短线展示输入 · 节点底部展示正式输出</span></div>
+            <div class="horizontal-flow">
+              <div id="decision-lane" class="flow-lane">
+                <div class="lane-head"><div><h4>第一行 · 原案裁决链路</h4><span>调查 → 正反独立审议 → 独立裁决</span></div><span class="badge green">已完成</span></div>
+                <div class="case-flow-canvas">
+                  <div class="case-flow-source">案件材料</div>
+                  <div class="case-input-arrow"><span>视频摘要 + 原始证据 E-001 + 锁定调查范围</span></div>
+                  <article class="monitor-node case-node"><div class="monitor-node-head"><i class="avatar">调</i><div><b>调查取证 Agent</b><small>形成共享事实底座</small></div></div><div class="case-output-grid"><div class="case-output-item"><label>人物事实</label><p><button class="flow-link" data-drawer>画面中存在未成年人</button></p></div><div class="case-output-item"><label>行为事实</label><p>出现可被模仿的危险动作</p></div><div class="case-output-item"><label>仍待确认</label><p>是否属于受控教学场景</p></div></div></article>
+                  <div class="case-input-arrow"><span>风险与反证共同使用：已验收证据包 + <button class="flow-link" data-policy-link>锁定规则快照 1.0</button></span></div>
+                  <div class="case-parallel"><div class="case-parallel-title">独立并行审议 · 共享事实底座，互不可见意见</div><div class="case-parallel-nodes">
+                    <article class="monitor-node case-node"><div class="monitor-node-head"><i class="avatar">险</i><div><b>风险研判 Agent</b><small>风险成立侧</small></div></div><div class="case-output-grid"><div class="case-output-item"><label>支持风险的事实</label><p>未成年人实施危险动作</p></div><div class="case-output-item"><label>对应哪条规则</label><p><button class="flow-link" data-policy-link>危险行为必要要件</button></p></div><div class="case-output-item"><label>风险侧结论</label><p><strong>违规要件成立</strong></p></div></div></article>
+                    <article class="monitor-node case-node"><div class="monitor-node-head"><i class="avatar">证</i><div><b>反证审查 Agent</b><small>例外与替代解释侧</small></div></div><div class="case-output-grid"><div class="case-output-item"><label>可能的例外</label><p>行为可能发生在教学演示中</p></div><div class="case-output-item"><label>为什么不能确认</label><p>缺少成人监督与场景证明</p></div><div class="case-output-item"><label>反证侧结论</label><p><strong>例外可能成立，但证据不足</strong></p></div></div></article>
+                  </div></div>
+                  <div class="case-input-arrow"><span>证据包 + 风险意见 + 反证意见 + 锁定规则</span></div>
+                  <article class="monitor-node case-node"><div class="monitor-node-head"><i class="avatar">裁</i><div><b>独立裁决 Agent</b><small>最终裁决角色</small></div></div><div class="case-output-grid"><div class="case-output-item"><label>最终判定</label><p><strong>违规</strong></p></div><div class="case-output-item"><label>为什么这样判</label><p>风险事实成立，教学例外尚未被证实</p></div><div class="case-output-item"><label>留下什么记录</label><p>引用 E-001、E-002 的正式裁决记录</p></div></div></article>
+                </div>
+              </div>
+
+              <div id="appeal-lane" class="flow-lane">
+                <div class="lane-head"><div><h4>第二行 · 申诉链路</h4><span>仅在存在申诉时出现，与原裁决团队隔离</span></div><span class="lane-trigger">新增白名单证据触发</span></div>
+                <div class="case-flow-canvas">
+                  <div class="case-flow-source">申诉提交</div>
+                  <div class="case-input-arrow"><span>冻结原案快照 + <button class="flow-link" data-drawer>白名单证据 E-APPEAL-001</button></span></div>
+                  <article class="monitor-node case-node"><div class="monitor-node-head"><i class="avatar">诉</i><div><b>申诉重审 Agent</b><small>与原裁决团队隔离</small></div></div><div class="case-output-grid"><div class="case-output-item"><label>新证据证明</label><p>成年人全程监督</p></div><div class="case-output-item"><label>新证据还证明</label><p>该行为属于教学演示</p></div><div class="case-output-item"><label>重审结果</label><p><strong>违规 → 不违规</strong></p></div></div></article>
+                </div>
+              </div>
+
+              <div id="policy-lane" class="flow-lane">
+                <div class="lane-head"><div><h4>第三行 · 规则演进链路</h4><span>不是因“低置信度”自动触发，而是申诉改判后归因为规则缺口才触发</span></div><span class="lane-trigger">申诉改判 + 规则缺口</span></div>
+                <div class="case-flow-canvas">
+                  <div class="case-flow-source">申诉改判</div>
+                  <div class="case-input-arrow"><span>申诉决定 + <button class="flow-link" data-policy-link>基线规则 1.0</button> + 非评分相似案例</span></div>
+                  <article class="monitor-node case-node"><div class="monitor-node-head"><i class="avatar">因</i><div><b>问题归因 Agent</b><small>诊断错误来源</small></div></div><div class="case-output-grid"><div class="case-output-item"><label>问题出在哪里</label><p><strong>教学例外规则写得过窄</strong></p></div><div class="case-output-item"><label>排除了什么</label><p>不是 Agent 推理错误，也不是单纯缺证据</p></div><div class="case-output-item"><label>下一步</label><p>进入候选规则流程</p></div></div></article>
+                  <div class="case-input-arrow"><span>规则缺口归因 + 基线规则 + 起草参考样本</span></div>
+                  <article class="monitor-node case-node"><div class="monitor-node-head"><i class="avatar">规</i><div><b>规则编写 Agent</b><small>仅生成候选版本</small></div></div><div class="case-output-grid"><div class="case-output-item"><label>规则变更</label><p>从受控教学例外中删除“保护装备”条件</p></div><div class="case-output-item"><label>保持不变</label><p>基线版本 1.0 不被覆盖</p></div><div class="case-output-item"><label>候选产物</label><p><button class="flow-link" data-policy-link>候选版本 2.0</button>，尚未发布</p></div></div></article>
+                  <div class="case-input-arrow"><span>基线规则 + 候选规则 + 固定回放数据集 v1</span></div>
+                  <article class="monitor-node case-node"><div class="monitor-node-head"><i class="avatar">回</i><div><b>回放分析 Agent</b><small>解释 Python 确定性结果</small></div></div><div class="case-output-grid"><div class="case-output-item"><label>原来的错案</label><p><strong>已经被候选规则纠正</strong></p></div><div class="case-output-item"><label>有没有新增副作用</label><p>暂未发现新增误伤或漏放</p></div><div class="case-output-item"><label>能否证明规则更好</label><p>样本太少，证据不足以定论</p></div></div></article>
+                  <div class="case-input-arrow"><span>候选规则草案 + 确定性回放报告</span></div>
+                  <article class="monitor-node case-node human"><div class="monitor-node-head"><i class="avatar">人</i><div><b>规则负责人</b><small>人工治理边界 · 非 Agent</small></div></div><div class="case-output-grid"><div class="case-output-item"><label>需要确认什么</label><p>候选改动及回放证据是否可接受</p></div><div class="case-output-item"><label>点击批准代表什么</label><p>只记录本次比赛审批结果</p></div><div class="case-output-item"><label>批准后会发生什么</label><p><strong>不会发布规则，也不会替换基线</strong></p></div></div></article>
+                </div>
+              </div>
+            </div>
+            <div class="agent-flowchart">
+              <div class="agent-stage coordinator"><div class="agent-stage-head"><i class="avatar">M</i><div><b>总控 Manager</b><small>协调 Agent · 只负责路由</small></div><span class="badge green">已完成</span></div><div class="io-grid"><div class="io-box"><label>输入</label><p>案件编号、任务单编号、step_type</p></div><div class="io-box"><label>输出</label><p>路由到案件裁决 Team Leader</p></div></div></div>
+              <div class="flow-arrow">↓</div>
+              <div class="agent-stage coordinator"><div class="agent-stage-head"><i class="avatar">TL</i><div><b>裁决 Team Leader</b><small>协调 Agent · 不生成领域产物</small></div><span class="badge green">已完成</span></div><div class="io-grid"><div class="io-box"><label>输入</label><p>调查 WorkOrder 编号</p></div><div class="io-box"><label>输出</label><p>唤醒并派发给调查取证 Agent</p></div></div></div>
+              <div class="flow-arrow">↓</div>
+              <div class="agent-stage selected" tabindex="0" data-node="investigation"><div class="agent-stage-head"><i class="avatar">I</i><div><b>调查取证 Agent</b><small>case-investigator</small></div><span class="badge green">已验收</span></div><div class="io-grid"><div class="io-box"><label>输入</label><p>Case 原始材料、E-001、调查范围</p></div><div class="io-box"><label>输出</label><p>EvidenceBundle：事实、推断、缺失与工具失败</p></div></div></div>
+              <div class="flow-arrow">↓</div>
+              <div class="parallel-agents">
+                <div class="agent-stage" tabindex="0" data-node="risk"><div class="agent-stage-head"><i class="avatar">R</i><div><b>风险研判 Agent</b><small>risk-prosecutor</small></div><span class="badge green">已验收</span></div><div class="io-grid"><div class="io-box"><label>输入</label><p>EvidenceBundle、规则快照 1.0</p></div><div class="io-box"><label>输出</label><p>RiskArgument：风险成立意见</p></div></div></div>
+                <div class="parallel-divider">独立并行</div>
+                <div class="agent-stage" tabindex="0" data-node="counter"><div class="agent-stage-head"><i class="avatar">C</i><div><b>反证审查 Agent</b><small>counter-reviewer</small></div><span class="badge green">已验收</span></div><div class="io-grid"><div class="io-box"><label>输入</label><p>EvidenceBundle、规则快照 1.0</p></div><div class="io-box"><label>输出</label><p>CounterArgument：例外与替代解释</p></div></div></div>
+              </div>
+              <span class="flow-gate">Kernel 等待两份正式产物均验收</span>
+              <div class="flow-arrow">↓</div>
+              <div class="agent-stage" tabindex="0" data-node="judge"><div class="agent-stage-head"><i class="avatar">J</i><div><b>独立裁决 Agent</b><small>independent-judge</small></div><span class="badge green">已验收</span></div><div class="io-grid"><div class="io-box"><label>输入</label><p>证据包、风险意见、反证意见、锁定规则</p></div><div class="io-box"><label>输出</label><p>DecisionRecord：VIOLATION</p></div></div></div>
+              <div class="flow-arrow">↓ 申诉</div>
+              <div class="agent-stage" tabindex="0" data-node="appeal"><div class="agent-stage-head"><i class="avatar">A</i><div><b>申诉重审 Agent</b><small>appeal-reviewer</small></div><span class="badge cyan">已改判</span></div><div class="io-grid"><div class="io-box"><label>输入</label><p>冻结原案快照、白名单证据 E-APPEAL-001</p></div><div class="io-box"><label>输出</label><p>AppealDecision：OVERTURN</p></div></div></div>
+              <div class="flow-arrow">↓</div>
+              <div class="agent-stage" tabindex="0" data-node="attribution"><div class="agent-stage-head"><i class="avatar">AT</i><div><b>问题归因 Agent</b><small>case-attributor</small></div><span class="badge amber">规则缺口</span></div><div class="io-grid"><div class="io-box"><label>输入</label><p>申诉决定、基线规则、非评分相似案例</p></div><div class="io-box"><label>输出</label><p>AttributionReport：POLICY_GAP</p></div></div></div>
+              <div class="flow-arrow">↓ 仅规则问题继续</div>
+              <div class="agent-stage" tabindex="0" data-node="policy"><div class="agent-stage-head"><i class="avatar">P</i><div><b>规则编写 Agent</b><small>policy-author</small></div><span class="badge green">候选版本</span></div><div class="io-grid"><div class="io-box"><label>输入</label><p>归因报告、BASELINE 1.0、起草样本</p></div><div class="io-box"><label>输出</label><p>PolicyProposal、结构化 Diff、候选 DSL</p></div></div></div>
+              <div class="flow-arrow">↓</div>
+              <div class="agent-stage" tabindex="0" data-node="replay"><div class="agent-stage-head"><i class="avatar">RP</i><div><b>回放分析 Agent</b><small>replay-analyst</small></div><span class="badge gray">证据不足以定论</span></div><div class="io-grid"><div class="io-box"><label>输入</label><p>基线/候选规则、固定数据集 v1</p></div><div class="io-box"><label>输出</label><p>ReplayReport：Python 指标与逐案结果</p></div></div></div>
+              <div class="flow-arrow">↓</div>
+              <div class="agent-stage human-stage" tabindex="0" data-node="human"><div class="agent-stage-head"><i class="avatar">H</i><div><b>规则负责人 Human</b><small>policy-owner · 非 Agent</small></div><span class="badge amber">待处理</span></div><div class="io-grid"><div class="io-box"><label>输入</label><p>绑定的 PolicyProposal 与 ReplayRun</p></div><div class="io-box"><label>输出</label><p>HumanApproval；不发布生产规则</p></div></div></div>
+            </div>
+          </section>
+
+          <aside class="panel inspector" aria-live="polite">
+            <span id="inspect-kicker" class="inspect-kicker">正式产物</span>
+            <h3 id="inspect-title">调查取证</h3>
+            <p id="inspect-agent">调查 Agent · 证据包</p>
+            <div class="inspect-block"><label>业务结论</label><p id="inspect-summary">事实、推断、缺失信息和工具失败被明确分开，形成正反审议共享的证据底座。</p></div>
+            <div class="inspect-block"><label>授权输入边界</label><div id="inspect-refs" class="ref-list"><code>CASE:CASE-…</code><code>EVIDENCE:E-001</code></div></div>
+            <div class="inspect-block"><label>正式执行链</label><div class="accept-chain"><span>任务单</span><span>正式产物</span><span>Kernel 验收</span></div></div>
+            <div class="inspect-block"><label>状态与证明</label><p id="inspect-proof">WO-STAGE6-LIVE-001-I · 成功<br>ART-WO-STAGE6-LIVE-001-I · 不可变</p></div>
+            <button class="secondary drawer-button" data-drawer>查看完整证据与编号</button>
+          </aside>
+        </div>
+      </section>
+
+      <section id="policies" class="view">
+        <div class="page-head">
+          <div>
+            <p class="eyebrow">不可变规则目录</p>
+            <h1>规则中心</h1>
+            <p>查看当前 Demo 使用的规则、基线版本、候选版本及其来源。人工批准不会自动替换基线规则。</p>
+          </div>
+          <div class="mode"><span>规则数量</span><strong>12 条</strong></div>
+        </div>
+        <div class="toolbar">
+          <input class="search" type="search" value="" placeholder="检索规则编号、名称或版本…" aria-label="检索规则">
+          <select class="filter" aria-label="按版本状态筛选"><option>全部版本状态</option><option>基线版本</option><option>候选版本</option></select>
+          <button class="secondary">清除筛选</button>
+        </div>
+        <div class="panel table-panel">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>规则编号</th><th>规则名称</th><th>适用内容</th><th>当前基线</th><th>候选版本</th><th>案件引用</th><th>更新时间</th></tr></thead>
+              <tbody id="policy-rows">
+                <tr class="policy-table-row" data-open-policy>
+                  <td><span class="case-code">MINOR_DANGEROUS_ACT</span></td>
+                  <td>未成年人危险行为<span class="sub">受控教育场景可以例外</span></td>
+                  <td>视频内容</td>
+                  <td><span class="badge green">1.0 · 基线</span></td>
+                  <td><span class="badge amber">1 个候选版本</span></td>
+                  <td>3 个演示案件</td>
+                  <td>10:21:06</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="policy-detail" class="view">
+        <div class="detail-head">
+          <button class="back" data-view="policies">← 返回规则中心</button>
+          <div class="case-title"><h1 id="policy-detail-title">未成年人危险行为</h1><span class="badge green" id="policy-baseline-badge-top">基线 1.0</span><span class="badge amber">候选版本 1 个</span></div>
+          <div class="case-meta"><span>规则编号 <code id="policy-detail-id">MINOR_DANGEROUS_ACT</code></span><span>适用内容 <code>VIDEO</code></span><span>版本方式 <code>不可变新增</code></span></div>
+        </div>
+        <div class="policy-detail-primary">
+          <article class="panel policy-question-card">
+            <p class="policy-question">规则说明</p>
+            <p class="policy-purpose-title" id="policy-purpose-title">未成年人实施危险行为时判定违规；受控教育场景可以例外。</p>
+            <p class="policy-purpose-copy" id="policy-purpose-copy">这是数据库中的人读说明；实际判定由下方结构化必要条件和例外条件执行。</p>
+            <div class="policy-role-strip" aria-label="规则基础字段"><span>适用内容：VIDEO</span><i>·</i><span>满足后结果：VIOLATION</span><i>·</i><span>规则结构：必要条件 + 例外条件</span></div>
+          </article>
+
+          <article class="panel policy-question-card">
+            <p class="policy-question">引用统计</p>
+            <div class="monitor-timebar policy-timebar" aria-label="规则引用统计时间筛选">
+              <strong>统计时间范围</strong>
+              <div class="time-presets">
+                <button class="time-button" data-policy-hours="1">过去 1 小时</button>
+                <button class="time-button active" data-policy-hours="24">过去 24 小时</button>
+                <button class="time-button" data-policy-hours="72">过去 3 天</button>
+                <button class="time-button" data-policy-hours="168">过去 7 天</button>
+                <button class="time-button" id="policy-custom-time-toggle">自定义时间</button>
+              </div>
+              <div class="custom-time" id="policy-custom-time-fields">
+                <label>开始 <input id="policy-custom-time-start" type="datetime-local" aria-label="规则统计自定义开始时间"></label>
+                <label>结束 <input id="policy-custom-time-end" type="datetime-local" aria-label="规则统计自定义结束时间"></label>
+                <button class="time-button" id="apply-policy-custom-time">应用</button>
+              </div>
+              <span class="time-summary" id="policy-time-summary">当前展示：过去 24 小时</span>
+            </div>
+            <div class="panel-title"><h3>案件引用与条件命中</h3><span class="badge gray">模拟监控数据</span></div>
+            <div class="policy-usage-grid">
+              <div class="policy-usage-stat"><label>引用案件</label><strong id="policy-usage-total">47</strong><small>案件快照锁定该规则</small></div>
+              <div class="policy-usage-stat"><label>命中必要条件</label><strong id="policy-usage-hit">31</strong><small>全部必要条件均成立</small></div>
+              <div class="policy-usage-stat"><label>适用例外</label><strong id="policy-usage-exception">16</strong><small>例外条件被证据支持</small></div>
+              <div class="policy-usage-stat"><label>最近引用</label><strong id="policy-usage-latest">12 分钟前</strong><small id="policy-usage-case">CASE-DEMO-0238</small></div>
+            </div>
+          </article>
+        </div>
+
+        <div class="policy-detail-secondary">
+          <article class="panel policy-question-card">
+            <p class="policy-question">判定逻辑</p>
+            <div class="panel-title"><h3>当前生效判定逻辑</h3><span class="badge green" id="policy-baseline-badge-logic">基线版本 1.0</span></div>
+            <div class="policy-logic-columns">
+              <div class="policy-logic-box"><h4 id="policy-positive-title">必要条件</h4><p id="policy-positive-copy">以下条件全部成立时，输出 VIOLATION</p><div class="condition-list" id="policy-positive-conditions"><div class="condition"><i>1</i><span>画面中存在未成年人</span></div><div class="condition"><i>2</i><span>出现危险动作</span></div></div></div>
+              <div class="policy-logic-box exception"><h4 id="policy-exception-title">例外条件</h4><p id="policy-exception-copy">以下条件全部成立时，排除违规</p><div class="condition-list" id="policy-exception-conditions"><div class="condition"><i>1</i><span>有成年人全程监督</span></div><div class="condition"><i>2</i><span>使用必要保护装备</span></div><div class="condition"><i>3</i><span>属于受控教学场景</span></div></div></div>
+            </div>
+          </article>
+
+          <article class="panel policy-question-card">
+            <p class="policy-question">版本状态</p>
+            <div class="panel-title"><h3>版本状态</h3><span>只新增，不覆盖</span></div>
+            <div class="policy-version-summary">
+              <div class="policy-version-row current"><b id="policy-current-version">正在使用：基线版本 1.0</b><p>案件创建时锁定此版本，后续变化不会影响原案。</p></div>
+              <div class="policy-version-row candidate"><b>候选版本 2.0 · 尚未发布</b><p>拟放宽教学例外条件；已完成回放，等待人工确认。</p></div>
+            </div>
+            <p class="policy-tech-note">候选版本来自正式规则草案，并保留结构化差异、回放记录和内容哈希。人工批准只记录比赛审批，不会替换当前基线。</p>
+            <button class="secondary drawer-button" data-drawer>查看版本证据与技术编号</button>
+          </article>
+        </div>
+      </section>
+
+      <section id="review" class="view">
+        <div class="page-head">
+          <div>
+            <p class="eyebrow">治理收件箱</p>
+            <h1>人工审批</h1>
+            <p>审核候选规则的具体变更内容及其历史案件回放影响。</p>
+          </div>
+          <div class="mode"><span>等待审批</span><strong>12 项</strong></div>
+        </div>
+        <div class="review-layout">
+          <aside class="panel review-list">
+            <div class="panel-title"><h3>待处理案件</h3><span>12</span></div>
+            <p class="review-list-note">1 个主演示案件 · 11 个模拟审批案件</p>
+            <div class="review-list-scroll" id="review-list-scroll">
+              <div class="review-card active" data-review-index="0">
+                <div class="review-card-head"><span class="badge amber">规则修改待确认</span><span class="badge green">主演示</span></div>
+                <h3>CASE-STAGE6-LIVE-001</h3>
+                <p>未成年人危险行为<br>删除“必须使用保护装备”条件</p>
+              </div>
+            </div>
+          </aside>
+          <section class="panel review-evidence">
+            <div class="approval-context">
+              <div>
+                <b id="review-selected-case">当前审批：CASE-STAGE6-LIVE-001</b>
+                <p id="review-selected-reason">申诉证明这是有人监督的教学视频，原规则却判成了违规。</p>
+              </div>
+              <div class="verdict-shift"><div class="verdict"><strong>违规</strong><span>原裁决</span></div><i class="arrow">→</i><div class="verdict"><strong>不违规</strong><span>申诉改判</span></div></div>
+            </div>
+
+            <div class="approval-compare">
+              <article class="approval-basis change">
+                <div class="approval-basis-head"><span>01</span><div><h2>规则变更内容</h2><p id="review-selected-policy">未成年人危险行为 · 基线 1.0 → 候选 2.0</p><button class="approval-policy-link" id="review-policy-link" data-policy-link data-policy-title="未成年人危险行为" data-policy-id="MINOR_DANGEROUS_ACT">查看规则详情 →</button></div></div>
+                <div class="approval-basis-body">
+                  <p class="plain-change" id="review-change-summary">从“受控教学场景”例外中删除“使用保护装备”条件</p>
+                  <div class="rule-before-after">
+                    <div class="rule-version-box"><label>原规则 · 基线 1.0</label><p id="review-rule-before">未成年人实施危险行为时判定违规。只有同时具备成人监督、保护装备和教学场景，才能排除违规。</p></div>
+                    <div class="rule-version-box after"><label>候选规则 · 版本 2.0</label><p id="review-rule-after">未成年人实施危险行为时判定违规。同时具备成人监督和教学场景，即可排除违规。</p></div>
+                  </div>
+                  <p class="impact-conclusion" id="review-change-boundary"><strong>实际影响：</strong>有成人监督且属于教学场景、但没有保护装备的案件，将由“违规”变为“不违规”。其他条件保持不变。</p>
+                </div>
+              </article>
+
+              <article class="approval-basis impact">
+                <div class="approval-basis-head"><span>02</span><div><h2>历史案件回放影响</h2><p>模拟批量回放数据 · 原规则与候选规则使用同一批案件</p></div></div>
+                <div class="approval-basis-body">
+                  <div class="replay-scope">
+                    <div><label>回放时间范围</label><strong>7 天</strong><span id="review-replay-range">2026-08-08 00:00 至 2026-08-15 00:00</span></div>
+                    <div class="replay-total"><label>回放案件</label><strong id="review-replay-total">240</strong></div>
+                  </div>
+                  <div class="replay-result-split">
+                    <div class="replay-result-card"><label>裁决不受影响</label><strong id="review-unaffected-count">228</strong><span>新旧规则裁决结果一致</span></div>
+                    <div class="replay-result-card affected"><label>裁决受到影响</label><strong id="review-affected-count">12</strong><span>新旧规则裁决结果不同</span></div>
+                  </div>
+                  <div class="replay-direction">
+                    <div class="replay-direction-card lighter"><label>判轻</label><strong id="review-lighter-count">12</strong><span>违规 → 不违规</span></div>
+                    <div class="replay-direction-card heavier"><label>判重</label><strong id="review-heavier-count">0</strong><span>不违规 → 违规</span></div>
+                  </div>
+                  <p class="replay-equation" id="review-replay-equation">240 场 = 228 场不受影响 + 12 场受影响；12 场受影响 = 12 场判轻 + 0 场判重</p>
+                </div>
+              </article>
+            </div>
+
+            <article class="approval-card approval-decision">
+              <div>
+                <span class="eyebrow">人工治理边界</span>
+                <h3 id="approval-title">等待规则负责人确认</h3>
+                <p id="approval-copy">审批绑定 ART-POLICY-PROPOSAL-001 与 REPLAY-STAGE6-LIVE-001。批准只记录比赛审批，不发布候选规则，也不替换基线版本。</p>
+              </div>
+              <div class="approval-actions">
+                <button class="ghost" data-drawer>检查完整证据</button>
+                <button id="open-replay-detail" class="ghost">查看回放详情</button>
+                <button id="approve-demo" class="primary">人工批准</button>
+              </div>
+            </article>
+          </section>
+        </div>
+      </section>
+
+      <section id="replay-detail" class="view">
+        <div class="detail-head">
+          <button class="back" data-view="review">← 返回人工审批</button>
+          <div class="case-title"><h1>回放详情</h1><span class="badge gray">模拟批量回放数据</span></div>
+          <div class="case-meta"><span>来源案件 <code id="replay-detail-source-case">CASE-STAGE6-LIVE-001</code></span><span>候选规则 <button class="policy-cell-link" id="replay-detail-policy-link" data-policy-link data-policy-title="未成年人危险行为" data-policy-id="MINOR_DANGEROUS_ACT">未成年人危险行为</button></span><span>数据版本 <code>mock-batch-v1</code></span></div>
+        </div>
+
+        <div class="replay-detail-summary">
+          <article class="panel replay-detail-stat scope"><label>回放时间范围</label><strong>2026-08-08 00:00 至 2026-08-15 00:00</strong><small>共 7 天</small></article>
+          <article class="panel replay-detail-stat"><label>回放案件</label><strong id="replay-detail-total">240</strong></article>
+          <article class="panel replay-detail-stat"><label>不受影响</label><strong id="replay-detail-unaffected">228</strong></article>
+          <article class="panel replay-detail-stat"><label>判轻</label><strong id="replay-detail-lighter">12</strong><small>违规 → 不违规</small></article>
+          <article class="panel replay-detail-stat"><label>判重</label><strong id="replay-detail-heavier">0</strong><small>不违规 → 违规</small></article>
+        </div>
+
+        <div class="toolbar">
+          <input class="search" id="replay-case-search" type="search" placeholder="检索回放案件编号或关键事实…" aria-label="检索回放案件">
+          <select class="filter" id="replay-impact-filter" aria-label="按回放影响筛选"><option value="ALL">全部影响类型</option><option value="UNAFFECTED">不受影响</option><option value="LIGHTER">判轻</option><option value="HEAVIER">判重</option></select>
+          <button class="secondary" id="replay-filter-reset">清除筛选</button>
+        </div>
+        <div class="panel table-panel">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>回放案件</th><th>关键事实</th><th>原规则裁决</th><th>候选规则裁决</th><th>影响</th></tr></thead>
+              <tbody id="replay-case-rows"></tbody>
+            </table>
+          </div>
+          <div class="table-pagination">
+            <div class="pagination-summary" id="replay-page-summary">共 240 场 · 第 1 / 12 页</div>
+            <div class="pagination-controls"><button id="replay-page-prev" aria-label="上一页">上一页</button><span id="replay-page-number">第 1 页</span><button id="replay-page-next" aria-label="下一页">下一页</button></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="drawer-backdrop" class="drawer-backdrop" aria-hidden="true">
+    <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+      <div class="drawer-head"><div><p class="eyebrow">证据抽屉</p><h2 id="drawer-title">完整执行证据</h2></div><button id="drawer-close" class="close" aria-label="关闭证据抽屉">×</button></div>
+      <p class="tiny-note">首屏展示“证明了什么”，这里展示“用哪些编号、引用和哈希证明”。</p>
+      <div class="evidence-record"><label>任务单编号</label><code>WO-STAGE6-LIVE-001-I</code></div>
+      <div class="evidence-record"><label>正式产物编号</label><code>ART-WO-STAGE6-LIVE-001-I</code></div>
+      <div class="evidence-record"><label>运行编号</label><code>RUN-STAGE6-LIVE-001-I</code></div>
+      <div class="evidence-record"><label>追踪编号</label><code>TRACE-STAGE6-LIVE-001</code></div>
+      <div class="evidence-record"><label>内容哈希</label><code>sha256:8be6d17c8a96b2d7d5612ac9e544e6c0…</code></div>
+      <div class="evidence-record"><label>规则快照哈希</label><code>sha256:3f6491f6e6adf8cc65c9160f67333e16…</code></div>
+      <div class="evidence-record"><label>回放数据集清单哈希</label><code>sha256:2335f9d68c3a7de614117f6a38b4a02502e101f2d23750493e11fe9794b9b334</code></div>
+      <div class="evidence-record"><label>Kernel 验收</label><code>schema_version=1.0 · ARTIFACT_ACCEPTED · immutable=true</code></div>
+    </aside>
+  </div>
+  <div id="toast" class="toast" role="status">已记录比赛审批；候选规则仍未发布</div>
+
+  <script>
+    const views = [...document.querySelectorAll('.view')];
+    const navButtons = [...document.querySelectorAll('.nav [data-view]')];
+    const drawerBackdrop = document.getElementById('drawer-backdrop');
+    const toast = document.getElementById('toast');
+
+    function showView(id) {
+      views.forEach(view => view.classList.toggle('active', view.id === id));
+      navButtons.forEach(button => button.classList.toggle('active', button.dataset.view === id || (id === 'case-detail' && button.dataset.view === 'cases') || (id === 'policy-detail' && button.dataset.view === 'policies') || (id === 'replay-detail' && button.dataset.view === 'review')));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function createDeterministicMockData() {
+      let seed = 20260814;
+      const random = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
+      const pick = values => values[Math.floor(random() * values.length)];
+      const pad = value => String(value).padStart(4, '0');
+      const summaries = ['未成年人危险行为视频', '危险动作模仿挑战', '受控教学实验片段', '户外高风险动作展示', '监护人陪同训练视频', '安全科普演示内容', '疑似危险工具使用', '青少年运动训练片段'];
+      const statutes = ['未成年人危险行为', '危险模仿行为', '受控教学场景例外', '监护人陪同例外', '高风险工具展示', '危险挑战传播', '专业训练场景例外', '安全科普内容例外', '未成年人保护原则', '证据不足裁决原则', '重复危险行为', '公共场所危险行为'];
+      const policyId = index => index === 0 ? 'MINOR_DANGEROUS_ACT' : `DEMO_POLICY_${String(index + 1).padStart(2,'0')}`;
+      const statusClass = {'调查中':'amber','正反审议中':'cyan','已裁决 · 违规':'red','已裁决 · 不违规':'green','证据不足':'gray','申诉中':'cyan','申诉改判':'green','维持原判':'gray','规则演进中':'amber','待人工确认':'amber','证据缺口已关闭':'gray','已关闭':'gray','执行失败':'red'};
+      const formatDateTime = date => { const iso = date.toISOString(); return `${iso.slice(0, 10)} ${iso.slice(11, 19)}`; };
+      const mockDateTime = (daysAgo, secondsOfDay) => formatDateTime(new Date(Date.UTC(2026, 7, 15 - daysAgo, 0, 0, secondsOfDay)));
+      const caseRows = [];
+      caseRows.push(`<tr data-case="CASE-STAGE6-LIVE-001" data-has-appeal="true" data-has-policy="true" data-status="待人工确认" data-policies="未成年人危险行为" data-search="case-stage6-live-001 未成年人危险行为 minor_dangerous_act 待人工确认"><td><span class="case-code">CASE-STAGE6-LIVE-001</span><span class="sub">未成年人危险行为 · 真实主演示案件</span></td><td><span class="badge amber">待人工确认</span></td><td><div class="policy-link-list"><button class="policy-cell-link" data-policy-link data-policy-title="未成年人危险行为" data-policy-id="MINOR_DANGEROUS_ACT" title="MINOR_DANGEROUS_ACT">未成年人危险行为</button></div></td><td>2026-08-13 09:42:18</td><td>2026-08-15 10:21:09</td></tr>`);
+      for (let i = 2; i <= 240; i += 1) {
+        const routeRoll = random();
+        const appealed = routeRoll >= .72;
+        const hasPolicy = routeRoll >= .94;
+        let status;
+        if (hasPolicy) status = pick(['规则演进中', '待人工确认']);
+        else if (appealed) status = pick(['申诉中', '申诉改判', '维持原判', '证据缺口已关闭']);
+        else status = pick(['调查中', '正反审议中', '已裁决 · 违规', '已裁决 · 不违规', '证据不足', '已关闭', '执行失败']);
+        const id = `CASE-MOCK-${pad(i)}`;
+        const summary = pick(summaries);
+        const lawCountRoll = random();
+        const lawCount = lawCountRoll < .52 ? 1 : lawCountRoll < .86 ? 2 : 3;
+        const lawIndexes = new Set();
+        while (lawIndexes.size < lawCount) lawIndexes.add(Math.floor(random() * statutes.length));
+        const relatedLaws = [...lawIndexes].map(index => ({ title: statutes[index], id: policyId(index) }));
+        const lawButtons = relatedLaws.map(law => `<button class="policy-cell-link" data-policy-link data-policy-title="${law.title}" data-policy-id="${law.id}" title="${law.id}">${law.title}</button>`).join('');
+        const lawTitles = relatedLaws.map(law => law.title);
+        const lawSearch = relatedLaws.map(law => `${law.title} ${law.id.toLowerCase()}`).join(' ');
+        const createdAgo = 2 + Math.floor(random() * 90);
+        const updatedAgo = Math.floor(random() * (createdAgo + 1));
+        const createdSecond = Math.floor(random() * 86400);
+        const updatedSecond = updatedAgo === createdAgo ? createdSecond + Math.floor(random() * (86400 - createdSecond)) : Math.floor(random() * 86400);
+        caseRows.push(`<tr data-case="${id}" data-has-appeal="${appealed}" data-has-policy="${hasPolicy}" data-status="${status}" data-policies="${lawTitles.join('|')}" data-search="${id.toLowerCase()} ${summary} ${status} ${lawSearch}"><td><span class="case-code">${id}</span><span class="sub">${summary} · 模拟案件</span></td><td><span class="badge ${statusClass[status]}">${status}</span></td><td><div class="policy-link-list">${lawButtons}</div></td><td>${mockDateTime(createdAgo, createdSecond)}</td><td>${mockDateTime(updatedAgo, updatedSecond)}</td></tr>`);
+      }
+      caseRows.push('<tr id="empty-row" class="empty-row"><td colspan="5">没有符合条件的案件</td></tr>');
+      document.getElementById('case-rows').innerHTML = caseRows.join('');
+
+      const policyRows = statutes.map((title, index) => {
+        const actual = index === 0;
+        const id = actual ? 'MINOR_DANGEROUS_ACT' : `DEMO_POLICY_${String(index + 1).padStart(2,'0')}`;
+        const hits = actual ? 47 : 4 + Math.floor(random() * 42);
+        const candidates = Math.floor(random() * 3);
+        return `<tr class="policy-table-row" data-open-policy data-policy-title="${title}" data-policy-id="${id}" data-policy-hits="${hits}" data-policy-index="${index}"><td><span class="case-code">${id}</span><span class="sub">${actual ? '真实演示规则' : '模拟规则'}</span></td><td>${title}<span class="sub">版本化机器规则与人读说明</span></td><td>视频内容</td><td><span class="badge green">1.${index} · 基线</span></td><td>${candidates ? `<span class="badge amber">${candidates} 个候选版本</span>` : '—'}</td><td>${hits} 个模拟案件</td><td>${actual ? '刚刚' : `${1 + index} 小时前`}</td></tr>`;
+      });
+      document.getElementById('policy-rows').innerHTML = policyRows.join('');
+
+      const taskLoads = [240, 240, 240, 240, 238, 67, 41, 29, 18, 18, 12];
+      document.querySelectorAll('.agent-monitor-card').forEach((card, index) => {
+        const task = [...card.querySelectorAll('.agent-stat')].find(stat => /任务|路由|派发/.test(stat.querySelector('label')?.textContent || ''));
+        if (task) task.querySelector('b').textContent = taskLoads[index] ?? '—';
+      });
+    }
+
+    createDeterministicMockData();
+
+    const timeButtons = [...document.querySelectorAll('.time-button[data-hours]')];
+    const customTimeToggle = document.getElementById('custom-time-toggle');
+    const customTimeFields = document.getElementById('custom-time-fields');
+    const customTimeStart = document.getElementById('custom-time-start');
+    const customTimeEnd = document.getElementById('custom-time-end');
+    const timeSummary = document.getElementById('time-summary');
+
+    function localDateTimeValue(date) {
+      const offset = date.getTimezoneOffset() * 60000;
+      return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+    }
+
+    function updateMonitorRange(hours, label) {
+      const factor = Math.max(hours, 0) / 24;
+      document.querySelectorAll('[data-base24]').forEach(value => {
+        const base = Number(value.dataset.base24);
+        value.textContent = factor === 0 ? '0' : String(Math.max(1, Math.round(base * factor)));
+      });
+      document.querySelectorAll('.monitor-node').forEach((node, index) => {
+        const metrics = [...node.querySelectorAll('.monitor-node-metric')];
+        const response = metrics.find(metric => metric.querySelector('label')?.textContent === '平均响应时间')?.querySelector('strong');
+        const success = metrics.find(metric => metric.querySelector('label')?.textContent === '产物验收通过率')?.querySelector('strong');
+        if (response) {
+          response.dataset.baseValue ||= String(parseFloat(response.textContent));
+          const base = Number(response.dataset.baseValue);
+          const adjustment = hours <= 1 ? -.06 : hours <= 24 ? 0 : hours <= 72 ? .035 : .06;
+          response.textContent = `${Math.max(.1, base * (1 + adjustment + (index % 3) * .004)).toFixed(1)} 秒`;
+        }
+        if (success) {
+          success.dataset.baseValue ||= String(parseFloat(success.textContent));
+          const base = Number(success.dataset.baseValue);
+          const adjustment = hours <= 1 ? .2 : hours <= 24 ? 0 : hours <= 72 ? -.1 : -.2;
+          success.textContent = `${Math.min(100, Math.max(0, base + adjustment - (index % 2) * .05)).toFixed(1).replace('.0', '')}%`;
+        }
+      });
+      document.querySelectorAll('.time-range-label').forEach(item => { item.textContent = label; });
+      timeSummary.textContent = `当前展示：${label}`;
+    }
+
+    const rangeEnd = new Date();
+    customTimeEnd.value = localDateTimeValue(rangeEnd);
+    customTimeStart.value = localDateTimeValue(new Date(rangeEnd.getTime() - 24 * 60 * 60 * 1000));
+
+    timeButtons.forEach(button => button.addEventListener('click', () => {
+      document.querySelectorAll('.monitor-workbench .time-button').forEach(item => item.classList.remove('active'));
+      button.classList.add('active');
+      customTimeFields.classList.remove('open');
+      updateMonitorRange(Number(button.dataset.hours), button.textContent.trim());
+    }));
+
+    customTimeToggle.addEventListener('click', () => {
+      document.querySelectorAll('.monitor-workbench .time-button').forEach(item => item.classList.remove('active'));
+      customTimeToggle.classList.add('active');
+      customTimeFields.classList.add('open');
+      customTimeStart.focus();
+    });
+
+    document.getElementById('apply-custom-time').addEventListener('click', () => {
+      const start = new Date(customTimeStart.value);
+      const end = new Date(customTimeEnd.value);
+      if (!customTimeStart.value || !customTimeEnd.value || end <= start) {
+        timeSummary.textContent = '请选择有效的开始和结束时间';
+        return;
+      }
+      const hours = (end - start) / 3600000;
+      const formatter = new Intl.DateTimeFormat('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+      updateMonitorRange(hours, `${formatter.format(start)} 至 ${formatter.format(end)}`);
+    });
+
+    const businessTimeButtons = [...document.querySelectorAll('.time-button[data-business-hours]')];
+    const businessCustomToggle = document.getElementById('business-custom-time-toggle');
+    const businessCustomFields = document.getElementById('business-custom-time-fields');
+    const businessCustomStart = document.getElementById('business-custom-time-start');
+    const businessCustomEnd = document.getElementById('business-custom-time-end');
+    const businessTimeSummary = document.getElementById('business-time-summary');
+    let currentBusinessHours = 24;
+
+    function drawBusinessLine(hours) {
+      const canvas = document.getElementById('business-line-chart');
+      const width = Math.max(520, canvas.parentElement.clientWidth || 760);
+      const height = 228;
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = width * ratio;
+      canvas.height = height * ratio;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(ratio, ratio);
+      const padding = { left: 40, right: 14, top: 14, bottom: 30 };
+      const plotWidth = width - padding.left - padding.right;
+      const plotHeight = height - padding.top - padding.bottom;
+      const points = hours <= 1 ? 12 : hours <= 72 ? 12 : 14;
+      const definitions = [
+        { color: '#4f7f2e', total24: 86, phase: .2 },
+        { color: '#16796f', total24: 61, phase: 1.1 },
+        { color: '#d49a42', total24: 22, phase: 2.0 },
+        { color: '#ad443b', total24: 14, phase: 2.7 }
+      ];
+      const distributeTotal = (total, phase, seriesIndex) => {
+        const weights = Array.from({ length: points }, (_, index) => 1 + Math.sin(index * .82 + phase) * .22 + (((index + seriesIndex * 2) % 5 === 0) ? .18 : 0));
+        const weightTotal = weights.reduce((sum, value) => sum + value, 0);
+        const raw = weights.map(value => total * value / weightTotal);
+        const values = raw.map(Math.floor);
+        let remainder = total - values.reduce((sum, value) => sum + value, 0);
+        const order = raw.map((value, index) => ({ index, fraction: value - Math.floor(value) })).sort((a, b) => b.fraction - a.fraction);
+        for (let index = 0; index < remainder; index += 1) values[order[index % points].index] += 1;
+        return values;
+      };
+      const series = definitions.map((definition, seriesIndex) => {
+        const total = Math.max(1, Math.round(definition.total24 * hours / 24));
+        return { ...definition, total, values: distributeTotal(total, definition.phase, seriesIndex) };
+      });
+      document.querySelectorAll('[data-line-total]').forEach(item => {
+        const current = series[Number(item.dataset.lineTotal)];
+        item.textContent = current ? String(current.total) : '0';
+      });
+      const max = Math.max(4, ...series.flatMap(item => item.values));
+      const gridMax = Math.ceil(max / 4) * 4;
+      ctx.clearRect(0, 0, width, height);
+      ctx.font = '10px "PingFang SC", sans-serif';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      for (let line = 0; line <= 4; line += 1) {
+        const y = padding.top + plotHeight * line / 4;
+        ctx.strokeStyle = '#dfe6df';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(padding.left, y); ctx.lineTo(width - padding.right, y); ctx.stroke();
+        ctx.fillStyle = '#738078';
+        ctx.fillText(String(Math.round(gridMax * (4 - line) / 4)), padding.left - 8, y);
+      }
+      const formatOffset = value => {
+        if (value === 0) return '现在';
+        if (hours <= 1) return `${Math.round(value * 60)} 分钟前`;
+        if (hours <= 24) return `${Math.round(value)} 小时前`;
+        return `${Math.round(value / 24)} 天前`;
+      };
+      ctx.textAlign = 'center';
+      [0, Math.floor((points - 1) / 2), points - 1].forEach(index => {
+        const x = padding.left + plotWidth * index / (points - 1);
+        const remaining = hours * (1 - index / (points - 1));
+        ctx.fillStyle = '#738078';
+        ctx.fillText(formatOffset(remaining), x, height - 10);
+      });
+      series.forEach(item => {
+        ctx.strokeStyle = item.color;
+        ctx.fillStyle = item.color;
+        ctx.lineWidth = 2.5;
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        item.values.forEach((value, index) => {
+          const x = padding.left + plotWidth * index / (points - 1);
+          const y = padding.top + plotHeight * (1 - value / gridMax);
+          if (index === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+        item.values.forEach((value, index) => {
+          const x = padding.left + plotWidth * index / (points - 1);
+          const y = padding.top + plotHeight * (1 - value / gridMax);
+          ctx.beginPath(); ctx.arc(x, y, 2.4, 0, Math.PI * 2); ctx.fill();
+        });
+      });
+    }
+
+    function updateBusinessRange(hours, label) {
+      currentBusinessHours = Math.max(hours, 0);
+      const factor = currentBusinessHours / 24;
+      const values = [...document.querySelectorAll('[data-policy-base]')].map(item => {
+        const value = factor === 0 ? 0 : Math.max(1, Math.round(Number(item.dataset.policyBase) * factor));
+        item.textContent = String(value);
+        return value;
+      });
+      const total = values.reduce((sum, value) => sum + value, 0);
+      document.getElementById('business-policy-total').firstChild.textContent = String(total);
+      const colors = ['#4f7f2e', '#16796f', '#d49a42', '#ad443b', '#6f91b6', '#a8b3ac'];
+      let cursor = 0;
+      const stops = values.map((value, index) => {
+        const start = total ? cursor / total * 100 : 0;
+        cursor += value;
+        const end = total ? cursor / total * 100 : 100;
+        return `${colors[index]} ${start.toFixed(2)}% ${end.toFixed(2)}%`;
+      });
+      document.getElementById('business-policy-pie').style.background = `conic-gradient(${stops.join(',')})`;
+      document.getElementById('business-line-range').textContent = `${label} · 按最终裁决类型`;
+      document.getElementById('business-pie-range').textContent = label;
+      businessTimeSummary.textContent = `当前展示：${label}`;
+      drawBusinessLine(currentBusinessHours);
+    }
+
+    businessCustomEnd.value = localDateTimeValue(rangeEnd);
+    businessCustomStart.value = localDateTimeValue(new Date(rangeEnd.getTime() - 24 * 60 * 60 * 1000));
+    businessTimeButtons.forEach(button => button.addEventListener('click', () => {
+      document.querySelectorAll('.business-timebar .time-button').forEach(item => item.classList.remove('active'));
+      button.classList.add('active');
+      businessCustomFields.classList.remove('open');
+      updateBusinessRange(Number(button.dataset.businessHours), button.textContent.trim());
+    }));
+    businessCustomToggle.addEventListener('click', () => {
+      document.querySelectorAll('.business-timebar .time-button').forEach(item => item.classList.remove('active'));
+      businessCustomToggle.classList.add('active');
+      businessCustomFields.classList.add('open');
+      businessCustomStart.focus();
+    });
+    document.getElementById('apply-business-custom-time').addEventListener('click', () => {
+      const start = new Date(businessCustomStart.value);
+      const end = new Date(businessCustomEnd.value);
+      if (!businessCustomStart.value || !businessCustomEnd.value || end <= start) {
+        businessTimeSummary.textContent = '请选择有效的开始和结束时间';
+        return;
+      }
+      const hours = (end - start) / 3600000;
+      const formatter = new Intl.DateTimeFormat('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+      updateBusinessRange(hours, `${formatter.format(start)} 至 ${formatter.format(end)}`);
+    });
+    updateBusinessRange(24, '过去 24 小时');
+    window.addEventListener('resize', () => drawBusinessLine(currentBusinessHours));
+
+    function setCaseRoute(caseId, hasAppeal, hasPolicy, origin = 'cases', policyTitle = '未成年人危险行为', policyVersion = '1.0') {
+      document.getElementById('detail-case-id').textContent = caseId;
+      document.getElementById('appeal-lane').style.display = hasAppeal ? '' : 'none';
+      document.getElementById('policy-lane').style.display = hasPolicy ? '' : 'none';
+      const back = document.getElementById('case-detail-back');
+      back.dataset.view = origin;
+      back.textContent = origin === 'replay-detail' ? '← 返回回放详情' : '← 返回案件中心';
+      document.getElementById('detail-case-summary').textContent = origin === 'replay-detail' ? `回放案件：${policyTitle}` : '固定案件：未成年人危险行为视频';
+      document.getElementById('detail-policy-version').textContent = `${policyVersion} · 已锁定`;
+      document.getElementById('detail-trace-id').textContent = origin === 'replay-detail' ? `TRACE-${caseId}` : 'TRACE-STAGE6-LIVE-001';
+      const badges = origin === 'replay-detail' ? ['<span class="badge gray">回放样本</span>', '<span class="badge green">已裁决</span>'] : ['<span class="badge green">原案裁决</span>'];
+      if (hasAppeal) badges.push('<span class="badge cyan">存在申诉</span>');
+      if (hasPolicy) badges.push('<span class="badge amber">规则演进</span>', '<span class="badge red">尚未发布</span>');
+      document.getElementById('detail-badges').innerHTML = badges.join(' ');
+    }
+
+    document.querySelectorAll('[data-view]').forEach(button => button.addEventListener('click', () => showView(button.dataset.view)));
+    document.querySelectorAll('[data-open-case]').forEach(button => button.addEventListener('click', () => { setCaseRoute(button.dataset.openCase, true, true); showView('case-detail'); }));
+    const policyDetailOrder = ['未成年人危险行为', '危险模仿行为', '受控教学场景例外', '监护人陪同例外', '高风险工具展示', '危险挑战传播', '专业训练场景例外', '安全科普内容例外', '未成年人保护原则', '证据不足裁决原则', '重复危险行为', '公共场所危险行为'];
+    const policyPurposeByTitle = {
+      '未成年人危险行为': '未成年人实施危险行为时判定违规；受控教育场景可以例外。',
+      '危险模仿行为': '展示容易被模仿并可能造成伤害的危险动作时判定违规。',
+      '受控教学场景例外': '具备监督、防护和教学目的的受控演示可以排除违规。',
+      '监护人陪同例外': '监护人全程陪同并能有效控制风险时可以排除违规。',
+      '高风险工具展示': '不当展示或使用刀具、火源等高风险工具时判定违规。',
+      '危险挑战传播': '鼓励或引导他人参与危险挑战时判定违规。',
+      '专业训练场景例外': '具备专业资质和保护措施的训练内容可以排除违规。',
+      '安全科普内容例外': '以安全教育为目的并明确提示风险的内容可以排除违规。',
+      '未成年人保护原则': '涉及未成年人时，应优先评估内容可能造成的伤害或诱导风险。',
+      '证据不足裁决原则': '关键事实无法确认时，不得作出确定性违规裁决。',
+      '重复危险行为': '同一内容多次或持续出现危险动作时提高风险判定等级。',
+      '公共场所危险行为': '在公共场所实施危险行为并影响他人安全时判定违规。'
+    };
+    function renderPolicyConditions(targetId, values) {
+      document.getElementById(targetId).innerHTML = values.map((value, index) => `<div class="condition"><i>${index + 1}</i><span>${value}</span></div>`).join('');
+    }
+    const policyTimeButtons = [...document.querySelectorAll('.time-button[data-policy-hours]')];
+    const policyCustomToggle = document.getElementById('policy-custom-time-toggle');
+    const policyCustomFields = document.getElementById('policy-custom-time-fields');
+    const policyCustomStart = document.getElementById('policy-custom-time-start');
+    const policyCustomEnd = document.getElementById('policy-custom-time-end');
+    const policyTimeSummary = document.getElementById('policy-time-summary');
+    let currentPolicyHours = 24;
+    let currentPolicyRangeLabel = '过去 24 小时';
+    let currentPolicyUsage = { total: 47, hitRatio: 31 / 47, index: 0 };
+
+    function updatePolicyRange(hours, label) {
+      currentPolicyHours = Math.max(hours, 0);
+      currentPolicyRangeLabel = label;
+      const factor = currentPolicyHours / 24;
+      const total = factor === 0 ? 0 : Math.max(1, Math.round(currentPolicyUsage.total * factor));
+      const hit = total === 0 ? 0 : Math.round(total * currentPolicyUsage.hitRatio);
+      document.getElementById('policy-usage-total').textContent = total;
+      document.getElementById('policy-usage-hit').textContent = hit;
+      document.getElementById('policy-usage-exception').textContent = Math.max(0, total - hit);
+      document.getElementById('policy-usage-latest').textContent = currentPolicyUsage.index === 0 ? '12 分钟前' : `${currentPolicyUsage.index + 1} 小时前`;
+      policyTimeSummary.textContent = `当前展示：${label}`;
+    }
+
+    function openPolicyDetail(element) {
+      const title = element.dataset.policyTitle || '未成年人危险行为';
+      const indexFromTitle = policyDetailOrder.indexOf(title);
+      const index = Number.isFinite(Number(element.dataset.policyIndex)) ? Number(element.dataset.policyIndex) : Math.max(0, indexFromTitle);
+      const total = Number(element.dataset.policyHits) || Math.max(8, 47 - index * 3);
+      const version = `1.${index}`;
+      const isMainPolicy = title === '未成年人危险行为';
+      document.getElementById('policy-detail-title').textContent = title;
+      document.getElementById('policy-detail-id').textContent = element.dataset.policyId || 'MINOR_DANGEROUS_ACT';
+      document.getElementById('policy-purpose-title').textContent = policyPurposeByTitle[title] || `说明“${title}”在案件裁决中的适用边界`;
+      document.getElementById('policy-purpose-copy').textContent = '这是数据库中的人读说明；实际判定由下方结构化必要条件和例外条件执行。';
+      currentPolicyUsage = { total, hitRatio: .66, index };
+      updatePolicyRange(currentPolicyHours, currentPolicyRangeLabel);
+      document.getElementById('policy-usage-case').textContent = `CASE-DEMO-${String(238 - index * 7).padStart(4, '0')}`;
+      document.getElementById('policy-baseline-badge-top').textContent = `基线 ${version}`;
+      document.getElementById('policy-baseline-badge-logic').textContent = `基线版本 ${version}`;
+      document.getElementById('policy-current-version').textContent = `正在使用：基线版本 ${version}`;
+      document.getElementById('policy-positive-title').textContent = '必要条件';
+      document.getElementById('policy-positive-copy').textContent = '以下条件全部成立时，执行规则结果';
+      document.getElementById('policy-exception-title').textContent = '例外条件';
+      document.getElementById('policy-exception-copy').textContent = '例外成立时，排除默认规则结果';
+      renderPolicyConditions('policy-positive-conditions', isMainPolicy ? ['画面中存在未成年人', '出现可被模仿的危险动作'] : [`案件事实符合“${title}”的适用对象`, '相关证据达到该规则要求']);
+      renderPolicyConditions('policy-exception-conditions', isMainPolicy ? ['有成年人全程监督', '使用必要保护装备', '属于受控教学场景'] : ['存在能够成立的相反证据或场景例外', '关键事实缺失，不能可靠确认']);
+      showView('policy-detail');
+    }
+    policyCustomEnd.value = localDateTimeValue(rangeEnd);
+    policyCustomStart.value = localDateTimeValue(new Date(rangeEnd.getTime() - 24 * 60 * 60 * 1000));
+    policyTimeButtons.forEach(button => button.addEventListener('click', () => {
+      document.querySelectorAll('.policy-timebar .time-button').forEach(item => item.classList.remove('active'));
+      button.classList.add('active');
+      policyCustomFields.classList.remove('open');
+      updatePolicyRange(Number(button.dataset.policyHours), button.textContent.trim());
+    }));
+    policyCustomToggle.addEventListener('click', () => {
+      document.querySelectorAll('.policy-timebar .time-button').forEach(item => item.classList.remove('active'));
+      policyCustomToggle.classList.add('active');
+      policyCustomFields.classList.add('open');
+      policyCustomStart.focus();
+    });
+    document.getElementById('apply-policy-custom-time').addEventListener('click', () => {
+      const start = new Date(policyCustomStart.value);
+      const end = new Date(policyCustomEnd.value);
+      if (!policyCustomStart.value || !policyCustomEnd.value || end <= start) {
+        policyTimeSummary.textContent = '请选择有效的开始和结束时间';
+        return;
+      }
+      const hours = (end - start) / 3600000;
+      const formatter = new Intl.DateTimeFormat('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+      updatePolicyRange(hours, `${formatter.format(start)} 至 ${formatter.format(end)}`);
+    });
+    updatePolicyRange(24, '过去 24 小时');
+    document.querySelectorAll('[data-open-policy]').forEach(row => row.addEventListener('click', () => openPolicyDetail(row)));
+    document.querySelectorAll('[data-policy-link]').forEach(link => link.addEventListener('click', event => { event.stopPropagation(); openPolicyDetail(link); }));
+    document.querySelectorAll('.agent-stat').forEach(stat => {
+      if (stat.querySelector('label')?.textContent === '平均耗时') stat.querySelector('b').textContent = '—';
+    });
+
+    document.querySelectorAll('#case-rows tr[data-case]').forEach(row => row.addEventListener('click', () => {
+      setCaseRoute(row.dataset.case, row.dataset.hasAppeal === 'true', row.dataset.hasPolicy === 'true');
+      showView('case-detail');
+    }));
+
+    const search = document.getElementById('case-search');
+    const filter = document.getElementById('case-filter');
+    const policyFilter = document.getElementById('case-policy-filter');
+    const pageSizeSelect = document.getElementById('case-page-size');
+    const pageSummary = document.getElementById('case-page-summary');
+    const pageNumbers = document.getElementById('case-page-numbers');
+    const previousPage = document.getElementById('case-page-prev');
+    const nextPage = document.getElementById('case-page-next');
+    let currentCasePage = 1;
+
+    function renderCasePageNumbers(pageCount) {
+      const pages = [];
+      let start = Math.max(1, currentCasePage - 2);
+      let end = Math.min(pageCount, start + 4);
+      start = Math.max(1, end - 4);
+      if (start > 1) pages.push(1, '…');
+      for (let page = start; page <= end; page += 1) pages.push(page);
+      if (end < pageCount) pages.push('…', pageCount);
+      pageNumbers.innerHTML = pages.map(page => page === '…' ? '<span aria-hidden="true">…</span>' : `<button class="${page === currentCasePage ? 'active' : ''}" data-case-page="${page}" aria-label="第 ${page} 页">${page}</button>`).join('');
+      pageNumbers.querySelectorAll('[data-case-page]').forEach(button => button.addEventListener('click', () => {
+        currentCasePage = Number(button.dataset.casePage);
+        filterCases(false);
+      }));
+    }
+
+    function filterCases(resetPage = true) {
+      if (resetPage) currentCasePage = 1;
+      const query = search.value.trim().toLowerCase();
+      const matchingRows = [...document.querySelectorAll('#case-rows tr[data-case]')].filter(row => {
+        const matchesText = !query || row.dataset.search.includes(query);
+        const matchesState = filter.value === 'ALL' || row.dataset.status.includes(filter.value);
+        const matchesPolicy = policyFilter.value === 'ALL' || row.dataset.policies.split('|').includes(policyFilter.value);
+        return matchesText && matchesState && matchesPolicy;
+      });
+      const pageSize = Number(pageSizeSelect.value);
+      const pageCount = Math.max(1, Math.ceil(matchingRows.length / pageSize));
+      currentCasePage = Math.min(currentCasePage, pageCount);
+      const firstIndex = (currentCasePage - 1) * pageSize;
+      const pageRows = new Set(matchingRows.slice(firstIndex, firstIndex + pageSize));
+      document.querySelectorAll('#case-rows tr[data-case]').forEach(row => { row.style.display = pageRows.has(row) ? '' : 'none'; });
+      const hasRows = matchingRows.length > 0;
+      document.getElementById('empty-row').style.display = hasRows ? 'none' : 'table-row';
+      const firstVisible = hasRows ? firstIndex + 1 : 0;
+      const lastVisible = hasRows ? Math.min(firstIndex + pageSize, matchingRows.length) : 0;
+      pageSummary.textContent = hasRows ? `第 ${firstVisible}–${lastVisible} 条，共 ${matchingRows.length} 条` : '没有符合条件的案件';
+      previousPage.disabled = currentCasePage <= 1;
+      nextPage.disabled = currentCasePage >= pageCount || !hasRows;
+      renderCasePageNumbers(pageCount);
+    }
+    search.addEventListener('input', filterCases);
+    filter.addEventListener('change', filterCases);
+    policyFilter.addEventListener('change', filterCases);
+    pageSizeSelect.addEventListener('change', () => filterCases(true));
+    previousPage.addEventListener('click', () => { if (currentCasePage > 1) { currentCasePage -= 1; filterCases(false); } });
+    nextPage.addEventListener('click', () => { currentCasePage += 1; filterCases(false); });
+    document.getElementById('clear-search').addEventListener('click', () => { search.value = ''; filter.value = 'ALL'; policyFilter.value = 'ALL'; filterCases(); search.focus(); });
+    filterCases();
+
+    const nodeData = {
+      investigation: { kicker: '正式产物', title: '调查取证', agent: '调查 Agent · 证据包', summary: '事实、推断、缺失信息和工具失败被明确分开，形成正反审议共享的证据底座。', refs: ['案件:CASE-…', '证据:E-001'], proof: 'WO-STAGE6-LIVE-001-I · 成功<br>ART-WO-STAGE6-LIVE-001-I · 不可变' },
+      risk: { kicker: '独立风险意见', title: '风险研判', agent: '风险 Agent · 风险意见', summary: '从风险成立一侧将证据映射到锁定规则要件，但不能读取或改写反证意见。', refs: ['正式产物:证据包', '规则快照:PS-001'], proof: 'WO-…-R / RUN-…-R<br>与反证审查使用不同任务单和运行编号' },
+      counter: { kicker: '独立反证意见', title: '反证审查', agent: '反证 Agent · 反证意见', summary: '独立寻找例外、矛盾和替代解释；其输入不包含风险意见。', refs: ['正式产物:证据包', '规则快照:PS-001'], proof: 'WO-…-C / RUN-…-C<br>与风险研判互不读取正式产物' },
+      judge: { kicker: 'Kernel 汇合门', title: '独立裁决', agent: '独立裁决 Agent · 裁决记录', summary: '只有风险意见与反证意见均通过 Kernel 验收后，裁决任务单才能产生。', refs: ['证据包', '风险意见', '反证意见', '规则快照'], proof: '裁决：违规<br>所有结论引用 evidence_id 与规则要件' },
+      appeal: { kicker: '隔离式独立重审', title: '申诉独立重审', agent: '申诉重审 Agent · 申诉决定', summary: '不读取原 Team 聊天或实时案件材料，只读取冻结原案快照和白名单新增证据。', refs: ['冻结快照', '证据:E-APPEAL-001'], proof: '原裁决：违规<br>申诉结果：改判' },
+      attribution: { kicker: '治理判断', title: '问题归因', agent: '归因 Agent · 归因报告', summary: '改判不自动等于规则有错。本案归因为规则缺口，并建议进入候选规则流程。', refs: ['申诉决定', '规则快照', '数据集:v1'], proof: '规则缺口 · 建议修改规则' },
+      policy: { kicker: '规则分支', title: '规则草案与回放', agent: '规则编写 Agent → 回放分析 Agent', summary: '候选规则作为不可变新版本写入，并由 Python 对固定数据集执行确定性回放。', refs: ['归因报告', '基线版本:1.0', '数据集:v1'], proof: '触发样本已纠正<br>评分集 n=1 · 证据不足以定论' },
+      replay: { kicker: '确定性回放', title: '回放分析', agent: '回放分析 Agent · 回放报告', summary: 'Agent 调用 Python 回放器并核对规则与数据集哈希；指标由程序计算，Agent 只负责解释。', refs: ['规则草案', '基线版本:1.0', '候选版本:2.0', '数据集:v1'], proof: '触发样本已纠正<br>评分集 n=1 · 新增误伤 0 · 新增漏放 0' },
+      closed: { kicker: '非规则分支', title: '证据问题正确停止', agent: '归因 Agent · 证据缺口', summary: '当改判只来自新增证据补齐时，流程在归因后关闭，不创建草案、回放或人工下游。', refs: ['申诉决定', '规则快照'], proof: '状态：已关闭<br>下游任务单：0' },
+      human: { kicker: '人工治理边界', title: '人工审批', agent: '规则负责人 · 人工审批记录', summary: '审批同时绑定具体规则草案与回放记录，只记录比赛审批，不发布生产规则。', refs: ['规则草案', '回放记录'], proof: '等待审批<br>候选版本 · 尚未发布' }
+    };
+
+    function inspectNode(key, element) {
+      const data = nodeData[key];
+      if (!data) return;
+      document.querySelectorAll('[data-node]').forEach(node => node.classList.remove('selected'));
+      element.classList.add('selected');
+      document.getElementById('inspect-kicker').textContent = data.kicker;
+      document.getElementById('inspect-title').textContent = data.title;
+      document.getElementById('inspect-agent').textContent = data.agent;
+      document.getElementById('inspect-summary').textContent = data.summary;
+      document.getElementById('inspect-refs').innerHTML = data.refs.map(ref => `<code>${ref}</code>`).join('');
+      document.getElementById('inspect-proof').innerHTML = data.proof;
+    }
+    document.querySelectorAll('[data-node]').forEach(node => {
+      node.addEventListener('click', () => inspectNode(node.dataset.node, node));
+      node.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); inspectNode(node.dataset.node, node); } });
+    });
+
+    const reviewItems = [
+      { caseId: 'CASE-STAGE6-LIVE-001', policy: '未成年人危险行为', version: '1.0 → 2.0', summary: '从“受控教学场景”例外中删除“使用保护装备”条件', before: '未成年人实施危险行为时判定违规。只有同时具备成人监督、保护装备和教学场景，才能排除违规。', after: '未成年人实施危险行为时判定违规。同时具备成人监督和教学场景，即可排除违规。', effect: '有成人监督且属于教学场景、但没有保护装备的案件，将由“违规”变为“不违规”。其他条件保持不变。', reason: '申诉证明这是有人监督的教学视频，原规则却判成了违规。', live: true },
+      { caseId: 'CASE-DEMO-0042', policy: '专业训练场景例外', version: '1.6 → 2.0', summary: '新增专业训练例外，不再把所有危险训练直接判违规', before: '出现高风险训练动作<br>直接判定违规', after: '专业资质已核验<br>＋ 防护措施完整<br>可以按例外处理', reason: '申诉补充了教练资质和完整防护记录，原规则没有专业训练例外。', fixed: 2, score: 8, fp: 0, fn: 0 },
+      { caseId: 'CASE-DEMO-0067', policy: '安全科普内容例外', version: '1.7 → 2.0', summary: '新增安全科普例外，明确风险提示充分时可以不判违规', before: '展示危险工具<br>直接判定违规', after: '安全教育目的<br>＋ 明确风险提示<br>可以按例外处理', reason: '申诉证明内容用于消防安全教学，但原规则没有区分科普与鼓励模仿。', fixed: 1, score: 12, fp: 0, fn: 0 },
+      { caseId: 'CASE-DEMO-0089', policy: '监护人陪同例外', version: '1.3 → 2.0', summary: '不再要求监护人必须始终出现在画面中', before: '监护人全程出镜<br>才能适用例外', after: '监督关系可由连续证据证明<br>不要求始终出镜', reason: '新增证据证明监护人一直在现场，只是部分时间没有出现在画面中。', fixed: 1, score: 10, fp: 0, fn: 0 },
+      { caseId: 'CASE-DEMO-0105', policy: '危险模仿行为', version: '1.1 → 2.0', summary: '增加“明确鼓励模仿”条件，避免仅展示动作就判违规', before: '危险动作可被模仿<br>直接判定违规', after: '危险动作可被模仿<br>＋ 存在鼓励或挑战表达', reason: '原案件只记录动作过程，没有鼓励观众模仿，但仍被判为违规。', fixed: 3, score: 18, fp: 0, fn: 0 },
+      { caseId: 'CASE-DEMO-0128', policy: '高风险工具展示', version: '1.4 → 2.0', summary: '增加工具是否正在被危险使用的判断', before: '画面出现高风险工具<br>直接判定违规', after: '出现高风险工具<br>＋ 正在被危险使用', reason: '申诉证明工具仅作为静态安全讲解道具，没有发生危险使用行为。', fixed: 2, score: 15, fp: 0, fn: 0 },
+      { caseId: 'CASE-DEMO-0144', policy: '危险挑战传播', version: '1.5 → 2.0', summary: '把“提及挑战”改为“明确号召参与挑战”', before: '内容提及危险挑战<br>直接判定违规', after: '明确号召、邀请或激励他人参与<br>才判定违规', reason: '原内容是在批评危险挑战，并未号召观众参与。', fixed: 2, score: 20, fp: 0, fn: 0 },
+      { caseId: 'CASE-DEMO-0161', policy: '公共场所危险行为', version: '1.11 → 2.0', summary: '增加是否实际影响他人安全的条件', before: '公共场所出现危险动作<br>直接判定违规', after: '公共场所危险动作<br>＋ 对他人形成实际风险', reason: '申诉证明拍摄区域已经封闭，没有无关人员进入。', fixed: 1, score: 16, fp: 0, fn: 0 },
+      { caseId: 'CASE-DEMO-0183', policy: '重复危险行为', version: '1.10 → 2.0', summary: '把“出现两次”调整为“持续或重复实施”', before: '同类动作出现两次<br>判定重复危险行为', after: '动作持续发生<br>或存在明确重复实施', reason: '同一动作被不同机位重复剪辑，原规则误认为行为发生了两次。', fixed: 1, score: 14, fp: 0, fn: 0 },
+      { caseId: 'CASE-DEMO-0206', policy: '证据不足裁决原则', version: '1.9 → 2.0', summary: '关键场景无法确认时，输出证据不足而不是直接判违规', before: '缺少例外证明<br>按违规处理', after: '关键场景事实缺失<br>输出证据不足', reason: '案件无法确认是否存在成人监督，原规则把“没有证据”当成“没有监督”。', fixed: 4, score: 22, fp: 0, fn: 0 },
+      { caseId: 'CASE-DEMO-0221', policy: '受控教学场景例外', version: '1.2 → 2.0', summary: '明确远程监督也可以满足成人监督条件', before: '成年人必须在画面现场<br>才能适用教学例外', after: '现场或可验证的实时远程监督<br>均可适用', reason: '申诉提交了实时远程指导记录，原规则只承认现场监督。', fixed: 1, score: 9, fp: 0, fn: 0 },
+      { caseId: 'CASE-DEMO-0239', policy: '未成年人保护原则', version: '1.8 → 2.0', summary: '增加内容是否面向未成年人的判断', before: '出现未成年人<br>直接提高风险等级', after: '出现未成年人<br>＋ 内容面向或可能触达未成年人', reason: '原内容属于封闭的成人专业培训，并不面向未成年人传播。', fixed: 2, score: 17, fp: 0, fn: 0 }
+    ];
+
+    const reviewList = document.getElementById('review-list-scroll');
+    reviewList.innerHTML = reviewItems.map((item, index) => `<div class="review-card ${index === 0 ? 'active' : ''}" data-review-index="${index}"><div class="review-card-head"><span class="badge amber">规则修改待确认</span><span class="badge ${item.live ? 'green' : 'gray'}">${item.live ? '主演示' : '模拟审批'}</span></div><h3>${item.caseId}</h3><p>${item.policy}<br>${item.summary}</p></div>`).join('');
+
+    let currentReviewIndex = 0;
+    function reviewReplayStats(index) {
+      const total = 240 + index * 16;
+      const affected = 12 + (index % 4) * 3;
+      const heavier = index % 5 === 4 ? 2 : 0;
+      return { total, affected, heavier, lighter: affected - heavier, unaffected: total - affected };
+    }
+    function policyIdForTitle(title) {
+      const index = Math.max(0, policyDetailOrder.indexOf(title));
+      return index === 0 ? 'MINOR_DANGEROUS_ACT' : `DEMO_POLICY_${String(index + 1).padStart(2, '0')}`;
+    }
+    function selectReviewItem(index) {
+      const item = reviewItems[index];
+      currentReviewIndex = index;
+      document.querySelectorAll('.review-card[data-review-index]').forEach((card, cardIndex) => card.classList.toggle('active', cardIndex === index));
+      document.getElementById('review-selected-case').textContent = `当前审批：${item.caseId}`;
+      document.getElementById('review-selected-reason').textContent = item.reason;
+      document.getElementById('review-selected-policy').textContent = `${item.policy} · ${item.version}`;
+      document.getElementById('review-change-summary').textContent = item.summary;
+      document.getElementById('review-rule-before').innerHTML = item.before;
+      document.getElementById('review-rule-after').innerHTML = item.after;
+      document.getElementById('review-change-boundary').innerHTML = `<strong>实际影响：</strong>${item.effect || '符合候选规则新边界的案件可能改变裁决；其他判定条件保持不变。'}`;
+      const { total, affected, heavier, lighter, unaffected } = reviewReplayStats(index);
+      document.getElementById('review-replay-range').textContent = '2026-08-08 00:00 至 2026-08-15 00:00';
+      document.getElementById('review-replay-total').textContent = total;
+      document.getElementById('review-unaffected-count').textContent = unaffected;
+      document.getElementById('review-affected-count').textContent = affected;
+      document.getElementById('review-lighter-count').textContent = lighter;
+      document.getElementById('review-heavier-count').textContent = heavier;
+      document.getElementById('review-replay-equation').textContent = `${total} 场 = ${unaffected} 场不受影响 + ${affected} 场受影响；${affected} 场受影响 = ${lighter} 场判轻 + ${heavier} 场判重`;
+      const policyId = policyIdForTitle(item.policy);
+      const reviewPolicyLink = document.getElementById('review-policy-link');
+      reviewPolicyLink.dataset.policyTitle = item.policy;
+      reviewPolicyLink.dataset.policyId = policyId;
+      const approveButton = document.getElementById('approve-demo');
+      approveButton.disabled = false;
+      approveButton.textContent = '人工批准';
+      document.getElementById('approval-title').textContent = '等待规则负责人确认';
+      document.getElementById('approval-copy').textContent = '批准只记录比赛审批，不发布候选规则，也不替换基线版本。';
+    }
+    reviewList.querySelectorAll('[data-review-index]').forEach(card => card.addEventListener('click', () => selectReviewItem(Number(card.dataset.reviewIndex))));
+
+    const replaySearch = document.getElementById('replay-case-search');
+    const replayImpactFilter = document.getElementById('replay-impact-filter');
+    const replayRowsBody = document.getElementById('replay-case-rows');
+    const replayPageSummary = document.getElementById('replay-page-summary');
+    const replayPageNumber = document.getElementById('replay-page-number');
+    const replayPagePrev = document.getElementById('replay-page-prev');
+    const replayPageNext = document.getElementById('replay-page-next');
+    let replayRows = [];
+    let replayPage = 1;
+    const replayPageSize = 20;
+
+    function renderReplayPage(resetPage = true) {
+      if (resetPage) replayPage = 1;
+      const query = replaySearch.value.trim().toLowerCase();
+      const impact = replayImpactFilter.value;
+      const matches = replayRows.filter(row => (!query || row.search.includes(query)) && (impact === 'ALL' || row.impact === impact));
+      const pageCount = Math.max(1, Math.ceil(matches.length / replayPageSize));
+      replayPage = Math.min(replayPage, pageCount);
+      const visible = matches.slice((replayPage - 1) * replayPageSize, replayPage * replayPageSize);
+      replayRowsBody.innerHTML = visible.length ? visible.map(row => `<tr><td><button class="replay-case-link" data-replay-case-id="${row.caseId}" data-replay-live="${row.mock ? 'false' : 'true'}">${row.caseId}</button><span class="sub">${row.mock ? '模拟回放案件' : '主演示案件'}</span></td><td class="replay-facts">${row.facts}</td><td><span class="replay-verdict ${row.baseline === '违规' ? 'violation' : 'clear'}">${row.baseline}</span></td><td><span class="replay-verdict ${row.candidate === '违规' ? 'violation' : 'clear'}">${row.candidate}</span></td><td><span class="badge ${row.impact === 'UNAFFECTED' ? 'gray' : row.impact === 'LIGHTER' ? 'green' : 'red'}">${row.impactLabel}</span></td></tr>`).join('') : '<tr><td colspan="5">没有符合条件的回放案件</td></tr>';
+      replayRowsBody.querySelectorAll('[data-replay-case-id]').forEach(button => button.addEventListener('click', () => {
+        const isLive = button.dataset.replayLive === 'true';
+        const item = reviewItems[currentReviewIndex];
+        const policyVersion = item.version.split('→')[0].trim();
+        setCaseRoute(button.dataset.replayCaseId, isLive, isLive, 'replay-detail', item.policy, policyVersion);
+        showView('case-detail');
+      }));
+      replayPageSummary.textContent = `共 ${matches.length} 场 · 第 ${replayPage} / ${pageCount} 页`;
+      replayPageNumber.textContent = `第 ${replayPage} 页`;
+      replayPagePrev.disabled = replayPage <= 1;
+      replayPageNext.disabled = replayPage >= pageCount;
+    }
+
+    function openReplayDetail() {
+      const item = reviewItems[currentReviewIndex];
+      const stats = reviewReplayStats(currentReviewIndex);
+      const policyId = policyIdForTitle(item.policy);
+      document.getElementById('replay-detail-source-case').textContent = item.caseId;
+      const policyLink = document.getElementById('replay-detail-policy-link');
+      policyLink.textContent = item.policy;
+      policyLink.dataset.policyTitle = item.policy;
+      policyLink.dataset.policyId = policyId;
+      document.getElementById('replay-detail-total').textContent = stats.total;
+      document.getElementById('replay-detail-unaffected').textContent = stats.unaffected;
+      document.getElementById('replay-detail-lighter').textContent = stats.lighter;
+      document.getElementById('replay-detail-heavier').textContent = stats.heavier;
+      replayRows = Array.from({ length: stats.total }, (_, rowIndex) => {
+        const isLighter = rowIndex < stats.lighter;
+        const isHeavier = rowIndex >= stats.lighter && rowIndex < stats.affected;
+        const impact = isLighter ? 'LIGHTER' : isHeavier ? 'HEAVIER' : 'UNAFFECTED';
+        const baseline = isLighter ? '违规' : isHeavier ? '不违规' : rowIndex % 3 === 0 ? '违规' : '不违规';
+        const candidate = isLighter ? '不违规' : isHeavier ? '违规' : baseline;
+        const facts = impact === 'UNAFFECTED' ? (baseline === '违规' ? '必要条件成立，且不满足候选例外条件' : '必要条件未全部成立，或原有例外已经成立') : currentReviewIndex === 0 ? '成人监督=是；教学场景=是；保护装备=否' : '案件事实落入候选规则调整后的适用边界';
+        const caseId = currentReviewIndex === 0 && rowIndex === 0 ? 'CASE-STAGE6-LIVE-001' : `REPLAY-CASE-${String(currentReviewIndex + 1).padStart(2, '0')}-${String(rowIndex + 1).padStart(4, '0')}`;
+        return { caseId, facts, baseline, candidate, impact, impactLabel: impact === 'LIGHTER' ? '判轻' : impact === 'HEAVIER' ? '判重' : '不受影响', mock: !(currentReviewIndex === 0 && rowIndex === 0), search: `${caseId} ${facts} ${baseline} ${candidate}`.toLowerCase() };
+      });
+      replaySearch.value = '';
+      replayImpactFilter.value = 'ALL';
+      renderReplayPage(true);
+      showView('replay-detail');
+    }
+    document.getElementById('open-replay-detail').addEventListener('click', openReplayDetail);
+    replaySearch.addEventListener('input', () => renderReplayPage(true));
+    replayImpactFilter.addEventListener('change', () => renderReplayPage(true));
+    document.getElementById('replay-filter-reset').addEventListener('click', () => { replaySearch.value = ''; replayImpactFilter.value = 'ALL'; renderReplayPage(true); });
+    replayPagePrev.addEventListener('click', () => { if (replayPage > 1) { replayPage -= 1; renderReplayPage(false); } });
+    replayPageNext.addEventListener('click', () => { replayPage += 1; renderReplayPage(false); });
+
+    function openDrawer() { drawerBackdrop.classList.add('open'); drawerBackdrop.setAttribute('aria-hidden', 'false'); document.getElementById('drawer-close').focus(); }
+    function closeDrawer() { drawerBackdrop.classList.remove('open'); drawerBackdrop.setAttribute('aria-hidden', 'true'); }
+    document.querySelectorAll('[data-drawer]').forEach(button => button.addEventListener('click', openDrawer));
+    document.getElementById('drawer-close').addEventListener('click', closeDrawer);
+    drawerBackdrop.addEventListener('click', event => { if (event.target === drawerBackdrop) closeDrawer(); });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') closeDrawer(); });
+
+    document.getElementById('approve-demo').addEventListener('click', event => {
+      event.currentTarget.disabled = true;
+      event.currentTarget.textContent = '已批准';
+      document.getElementById('approval-title').textContent = '已批准 · 规则负责人';
+      document.getElementById('approval-copy').textContent = '比赛审批结果已记录。候选规则仍未发布，基线版本 1.0 未被替换。';
+      toast.classList.add('show');
+      window.setTimeout(() => toast.classList.remove('show'), 2600);
+    });
+  </script>
+</body>
+</html>

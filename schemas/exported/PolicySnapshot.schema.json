@@ -1,0 +1,62 @@
+{
+  "$defs": {
+    "LockedPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "content_hash": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Content Hash",
+          "type": "string"
+        },
+        "policy_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Policy Id",
+          "type": "string"
+        },
+        "version": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "policy_id",
+        "version",
+        "content_hash"
+      ],
+      "title": "LockedPolicy",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "policies": {
+      "items": {
+        "$ref": "#/$defs/LockedPolicy"
+      },
+      "minItems": 1,
+      "title": "Policies",
+      "type": "array"
+    },
+    "snapshot_hash": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Snapshot Hash",
+      "type": "string"
+    },
+    "snapshot_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Snapshot Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "snapshot_id",
+    "policies",
+    "snapshot_hash"
+  ],
+  "title": "PolicySnapshot",
+  "type": "object"
+}

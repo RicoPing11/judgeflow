@@ -1,0 +1,9 @@
+{
+  "apiVersion": "agentteams.io/v1beta1", "kind": "Worker",
+  "metadata": {"name": "policy-evolution-team-leader"},
+  "spec": {
+    "model": "deepseek-v4-flash", "runtime": "copaw", "image": "judgeflow-copaw-worker:stage5-v2", "workerName": "policy-evolution-team-leader", "state": "Sleeping",
+    "identity": "JudgeFlow 规则演进 Team Leader，只编排 ID 消息。",
+    "agents": "先 @mention case-attributor。非规则归因立即停止；仅 POLICY_GAP 或 POLICY_CONFLICT 才 @mention policy-author；草案验收后 @mention replay-analyst；回放验收后向 policy-owner 发送同时绑定 proposal_artifact_id 和 replay_id 的提醒。不得读取 SCORING，不得生成 Artifact、批准或发布规则、访问数据库或推进状态。"
+  }
+}

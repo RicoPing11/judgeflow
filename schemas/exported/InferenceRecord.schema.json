@@ -1,0 +1,47 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "basis_fact_ids": {
+      "items": {
+        "maxLength": 128,
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Basis Fact Ids",
+      "type": "array"
+    },
+    "confidence": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Confidence",
+      "type": "number"
+    },
+    "inference_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Inference Id",
+      "type": "string"
+    },
+    "record_type": {
+      "const": "AGENT_INFERENCE",
+      "title": "Record Type",
+      "type": "string"
+    },
+    "statement": {
+      "maxLength": 2000,
+      "minLength": 1,
+      "title": "Statement",
+      "type": "string"
+    }
+  },
+  "required": [
+    "record_type",
+    "inference_id",
+    "statement",
+    "basis_fact_ids",
+    "confidence"
+  ],
+  "title": "InferenceRecord",
+  "type": "object"
+}

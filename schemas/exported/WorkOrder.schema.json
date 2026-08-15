@@ -1,0 +1,163 @@
+{
+  "$defs": {
+    "AggregateType": {
+      "enum": [
+        "CASE",
+        "APPEAL",
+        "POLICY_EVOLUTION"
+      ],
+      "title": "AggregateType",
+      "type": "string"
+    },
+    "ArtifactType": {
+      "enum": [
+        "EVIDENCE_BUNDLE",
+        "RISK_ARGUMENT",
+        "COUNTER_ARGUMENT",
+        "DECISION_RECORD",
+        "APPEAL_DECISION",
+        "ATTRIBUTION_REPORT",
+        "POLICY_PROPOSAL",
+        "REPLAY_REPORT",
+        "HUMAN_APPROVAL"
+      ],
+      "title": "ArtifactType",
+      "type": "string"
+    },
+    "InputRef": {
+      "additionalProperties": false,
+      "properties": {
+        "ref_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Ref Id",
+          "type": "string"
+        },
+        "ref_type": {
+          "enum": [
+            "CASE",
+            "APPEAL",
+            "EVIDENCE",
+            "ARTIFACT",
+            "POLICY_SNAPSHOT",
+            "REPLAY_DATASET"
+          ],
+          "title": "Ref Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "ref_type",
+        "ref_id"
+      ],
+      "title": "InputRef",
+      "type": "object"
+    },
+    "WorkStep": {
+      "enum": [
+        "INVESTIGATION",
+        "RISK_ARGUMENT",
+        "COUNTER_ARGUMENT",
+        "ADJUDICATION",
+        "APPEAL_REVIEW",
+        "ATTRIBUTION",
+        "POLICY_DRAFTING",
+        "REPLAY"
+      ],
+      "title": "WorkStep",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "aggregate_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Aggregate Id",
+      "type": "string"
+    },
+    "aggregate_type": {
+      "$ref": "#/$defs/AggregateType"
+    },
+    "assignee_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Assignee Id",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "expected_artifact_type": {
+      "$ref": "#/$defs/ArtifactType"
+    },
+    "input_refs": {
+      "items": {
+        "$ref": "#/$defs/InputRef"
+      },
+      "minItems": 1,
+      "title": "Input Refs",
+      "type": "array"
+    },
+    "retry_count": {
+      "minimum": 0,
+      "title": "Retry Count",
+      "type": "integer"
+    },
+    "run_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Run Id",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "PENDING",
+        "RUNNING",
+        "SUCCEEDED",
+        "FAILED"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "step_type": {
+      "$ref": "#/$defs/WorkStep"
+    },
+    "trace_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Trace Id",
+      "type": "string"
+    },
+    "updated_at": {
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+    },
+    "work_order_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Work Order Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "work_order_id",
+    "aggregate_type",
+    "aggregate_id",
+    "step_type",
+    "assignee_id",
+    "input_refs",
+    "expected_artifact_type",
+    "run_id",
+    "trace_id",
+    "status",
+    "retry_count",
+    "created_at",
+    "updated_at"
+  ],
+  "title": "WorkOrder",
+  "type": "object"
+}

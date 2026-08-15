@@ -1,0 +1,105 @@
+{
+  "$defs": {
+    "FormalConclusion": {
+      "additionalProperties": false,
+      "properties": {
+        "conclusion_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Conclusion Id",
+          "type": "string"
+        },
+        "evidence_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "policy_ref": {
+          "$ref": "#/$defs/PolicyReference"
+        },
+        "statement": {
+          "maxLength": 2000,
+          "minLength": 1,
+          "title": "Statement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "conclusion_id",
+        "statement",
+        "evidence_id",
+        "policy_ref"
+      ],
+      "title": "FormalConclusion",
+      "type": "object"
+    },
+    "PolicyReference": {
+      "additionalProperties": false,
+      "properties": {
+        "clause_ids": {
+          "items": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Clause Ids",
+          "type": "array"
+        },
+        "policy_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Policy Id",
+          "type": "string"
+        },
+        "version": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "policy_id",
+        "version",
+        "clause_ids"
+      ],
+      "title": "PolicyReference",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "alternative_explanations": {
+      "items": {
+        "maxLength": 2000,
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Alternative Explanations",
+      "type": "array"
+    },
+    "argument_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Argument Id",
+      "type": "string"
+    },
+    "conclusions": {
+      "items": {
+        "$ref": "#/$defs/FormalConclusion"
+      },
+      "minItems": 1,
+      "title": "Conclusions",
+      "type": "array"
+    }
+  },
+  "required": [
+    "argument_id",
+    "conclusions",
+    "alternative_explanations"
+  ],
+  "title": "CounterArgument",
+  "type": "object"
+}

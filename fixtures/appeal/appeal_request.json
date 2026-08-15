@@ -1,0 +1,8 @@
+{
+  "appeal_id": "APPEAL-001",
+  "case_id": "CASE-001",
+  "reason_id": "REASON-001",
+  "reason": "新增材料可证明视频属于有成人监督的安全教学活动。",
+  "original_decision_id": "DR-001",
+  "allowed_new_evidence_ids": ["E-APPEAL-001"]
+}

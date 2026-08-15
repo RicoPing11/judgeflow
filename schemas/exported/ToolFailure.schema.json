@@ -1,0 +1,54 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "error_code": {
+      "enum": [
+        "NOT_FOUND",
+        "INCOMPLETE_DATA",
+        "PERMISSION_DENIED",
+        "VALIDATION_ERROR",
+        "TIMEOUT",
+        "CONFLICT"
+      ],
+      "title": "Error Code",
+      "type": "string"
+    },
+    "failure_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Failure Id",
+      "type": "string"
+    },
+    "message": {
+      "maxLength": 2000,
+      "minLength": 1,
+      "title": "Message",
+      "type": "string"
+    },
+    "occurred_at": {
+      "format": "date-time",
+      "title": "Occurred At",
+      "type": "string"
+    },
+    "retryable": {
+      "title": "Retryable",
+      "type": "boolean"
+    },
+    "tool_name": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Tool Name",
+      "type": "string"
+    }
+  },
+  "required": [
+    "failure_id",
+    "tool_name",
+    "error_code",
+    "message",
+    "retryable",
+    "occurred_at"
+  ],
+  "title": "ToolFailure",
+  "type": "object"
+}

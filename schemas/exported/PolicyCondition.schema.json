@@ -1,0 +1,133 @@
+{
+  "$defs": {
+    "PolicyCondition": {
+      "additionalProperties": false,
+      "properties": {
+        "all_of": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/PolicyCondition"
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "All Of"
+        },
+        "any_of": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/PolicyCondition"
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Any Of"
+        },
+        "condition_id": {
+          "anyOf": [
+            {
+              "maxLength": 128,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Condition Id"
+        },
+        "fact": {
+          "anyOf": [
+            {
+              "maxLength": 128,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fact"
+        },
+        "op": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PolicyOperator"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        }
+      },
+      "title": "PolicyCondition",
+      "type": "object"
+    },
+    "PolicyOperator": {
+      "enum": [
+        "EQ",
+        "IN",
+        "GTE",
+        "LTE"
+      ],
+      "title": "PolicyOperator",
+      "type": "string"
+    }
+  },
+  "$ref": "#/$defs/PolicyCondition"
+}

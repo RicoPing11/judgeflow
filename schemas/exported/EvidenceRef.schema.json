@@ -1,0 +1,47 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "collected_at": {
+      "format": "date-time",
+      "title": "Collected At",
+      "type": "string"
+    },
+    "content_hash": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "evidence_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Evidence Id",
+      "type": "string"
+    },
+    "source_ref": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Source Ref",
+      "type": "string"
+    },
+    "source_type": {
+      "enum": [
+        "CONTENT",
+        "TRANSCRIPT",
+        "ACCOUNT",
+        "RELATIONSHIP",
+        "APPEAL_SUBMISSION"
+      ],
+      "title": "Source Type",
+      "type": "string"
+    }
+  },
+  "required": [
+    "evidence_id",
+    "source_type",
+    "source_ref",
+    "content_hash",
+    "collected_at"
+  ],
+  "title": "EvidenceRef",
+  "type": "object"
+}

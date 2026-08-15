@@ -1,0 +1,17 @@
+{
+  "apiVersion": "agentteams.io/v1beta1",
+  "kind": "Team",
+  "metadata": {"name": "judgeflow-adjudication"},
+  "spec": {
+    "teamName": "judgeflow-adjudication",
+    "description": "调查、风险与反证独立执行；两份意见验收后才允许独立裁决。",
+    "peerMentions": true,
+    "workerMembers": [
+      {"name": "adjudication-team-leader", "role": "team_leader"},
+      {"name": "case-investigator", "role": "worker"},
+      {"name": "risk-prosecutor", "role": "worker"},
+      {"name": "counter-reviewer", "role": "worker"},
+      {"name": "independent-judge", "role": "worker"}
+    ]
+  }
+}

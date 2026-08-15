@@ -1,0 +1,24 @@
+{
+  "dataset_version": "v1",
+  "manifest_hash": "sha256:2335f9d68c3a7de614117f6a38b4a02502e101f2d23750493e11fe9794b9b334",
+  "samples": [
+    {
+      "sample_id": "REPLAY-TRIGGER-001",
+      "split": "TRIGGER",
+      "facts": {"MINOR_PRESENT": true, "DANGEROUS_ACT": true, "ADULT_SUPERVISION": true, "PROTECTIVE_EQUIPMENT": false, "EDUCATIONAL_CONTEXT": true},
+      "expected_outcome": "NO_VIOLATION"
+    },
+    {
+      "sample_id": "REPLAY-DRAFTING-001",
+      "split": "DRAFTING",
+      "facts": {"MINOR_PRESENT": true, "DANGEROUS_ACT": true, "ADULT_SUPERVISION": false, "PROTECTIVE_EQUIPMENT": false, "EDUCATIONAL_CONTEXT": false},
+      "expected_outcome": "VIOLATION"
+    },
+    {
+      "sample_id": "REPLAY-SCORING-001",
+      "split": "SCORING",
+      "facts": {"MINOR_PRESENT": true, "DANGEROUS_ACT": true, "ADULT_SUPERVISION": true, "PROTECTIVE_EQUIPMENT": true, "EDUCATIONAL_CONTEXT": true},
+      "expected_outcome": "NO_VIOLATION"
+    }
+  ]
+}

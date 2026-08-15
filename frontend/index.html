@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JudgeFlow · 独立裁决与规则演进</title>
+  <meta name="description" content="JudgeFlow 多智能体调查、裁决、申诉与规则演进系统">
+  <link rel="stylesheet" href="/app.css">
+  <link rel="stylesheet" href="/refinement.css">
+</head>
+<body>
+  <header class="topbar">
+    <button class="brand" data-view="overview" aria-label="返回运行监控"><i></i><span><b>JudgeFlow</b><small>多智能体决策治理</small></span></button>
+    <nav aria-label="主导航"><button class="active" data-view="overview">运行监控</button><button data-view="cases">案件中心</button><button data-view="policies">规则中心</button><button data-view="approvals">人工审批</button></nav>
+    <span class="source-chip"><i></i>真实后端数据</span>
+  </header>
+  <main>
+    <section id="overview" class="view active">
+      <div class="page-head"><div><p class="eyebrow">RUN MONITOR</p><h1>运行监控</h1><p>以正式 WorkOrder、Artifact 和业务记录观察裁决链与规则演进链。</p></div></div>
+      <article class="panel run-console"><div><label for="run-id">主演示隔离运行 ID</label><input id="run-id" value="DEMO-STAGE6-LIVE-001" autocomplete="off" spellcheck="false"></div><div class="actions"><button id="start" class="primary">运行固定闭环</button><button id="refresh-run">刷新主演示</button><button id="failure">验证 TIMEOUT</button></div><span id="global-state" class="badge neutral">未开始</span></article>
+      <div class="timebar panel"><strong>数据范围</strong><button data-hours="1">过去 1 小时</button><button data-hours="24">过去 24 小时</button><button data-hours="72">过去 3 天</button><button class="active" data-hours="168">过去 7 天</button><button id="custom-toggle">自定义时间</button><span id="custom-fields" hidden style="display:none"><input id="from-time" type="datetime-local"><input id="to-time" type="datetime-local"><button id="apply-time">应用</button></span><small id="range-label">过去 7 天</small></div>
+      <section class="panel flow-monitor">
+        <div class="section-head"><div><h2>裁决链路</h2><p>风险研判与反证审查使用独立任务单和隔离输入。</p></div><span class="data-label">真实聚合</span></div><div id="decision-chain" class="chain loading">正在读取 WorkOrder 聚合…</div>
+        <div class="section-head second"><div><h2>规则演进链路</h2><p>EVIDENCE_GAP 在归因后关闭；只有 POLICY_GAP 才进入规则编写、回放与人工审批。</p></div><span class="data-label">真实聚合</span></div><div id="policy-chain" class="chain loading">正在读取 WorkOrder 聚合…</div>
+      </section>
+      <section class="business-grid"><article class="panel"><div class="section-head"><div><h2>案件结果趋势</h2><p>按正式产物日期展示裁决与申诉改判</p></div></div><div id="decision-series" class="trend-series"></div><div id="decision-trend" class="stats compact"></div></article><article class="panel"><div class="section-head"><div><h2>规则命中分布</h2><p>同一案件可能引用多条规则</p></div></div><div id="policy-hits" class="bars"></div></article></section>
+      <p id="failure-text" class="notice">失败、业务无数据、未开始、运行中和成功在页面中保持不同语义。</p>
+    </section>
+    <section id="cases" class="view">
+      <div class="page-head"><div><p class="eyebrow">CASE CENTER</p><h1>案件中心</h1><p>检索真实案件、综合状态和案件创建时锁定的相关规则。</p></div></div>
+      <div class="toolbar cases-toolbar"><input id="case-q" placeholder="检索案件编号、摘要或规则"><select id="case-status"><option value="">全部状态</option><option value="NEW">未开始</option><option value="INVESTIGATING">调查中</option><option value="ARGUING">正反审议中</option><option value="ADJUDICATING">独立裁决中</option><option value="DECIDED">已裁决</option><option value="APPEAL_REVIEWING">申诉中</option><option value="POLICY_EVOLUTION">规则演进中</option><option value="AWAITING_APPROVAL">待人工审批</option></select><select id="case-policy"><option value="">全部规则</option></select><select id="case-page-size" aria-label="每页条数"><option value="20">每页 20 条</option><option value="50">每页 50 条</option><option value="100">每页 100 条</option></select><button id="case-search">查询</button><button id="case-clear" class="secondary">清除筛选</button></div>
+      <div class="panel table-wrap"><table><thead><tr><th>案件</th><th>案件状态</th><th>相关规则</th><th>裁决置信度</th><th>创建时间</th><th>更新时间</th></tr></thead><tbody id="case-rows"></tbody></table><div id="case-pagination" class="pagination"></div></div>
+    </section>
+    <section id="case-detail" class="view">
+      <button id="case-detail-back" class="back" data-view="cases">← 返回案件中心</button><div class="page-head"><div><p class="eyebrow">CASE DETAIL · 记录回放</p><h1 id="case-detail-title">案件详情</h1><p id="case-detail-summary">—</p></div><button class="secondary" data-drawer>查看技术证据</button></div><div id="case-meta" class="meta-row"></div>
+      <section class="panel flow-detail"><div class="section-head"><div><h2>Agent 执行流程图</h2><p>短线展示输入；节点下方展示经过 Kernel 验收的正式输出。</p></div></div><div id="case-flow"></div></section>
+    </section>
+    <section id="policies" class="view">
+      <div class="page-head"><div><p class="eyebrow">POLICY CENTER</p><h1>规则中心</h1><p>查看规则用途、不可变版本、引用案件和候选版本。</p></div></div>
+      <div class="toolbar"><input id="policy-q" placeholder="检索规则编号、名称或用途"><select id="policy-status"><option value="">全部版本状态</option><option value="BASELINE">基线规则</option><option value="CANDIDATE">候选规则</option></select><button id="policy-search">查询</button><button id="policy-clear" class="secondary">清除筛选</button></div>
+      <div class="panel table-wrap"><table><thead><tr><th>规则编号</th><th>名称与用途</th><th>基线版本</th><th>候选版本</th><th>引用次数</th><th>更新时间</th></tr></thead><tbody id="policy-rows"></tbody></table><div id="policy-pagination" class="pagination"></div></div>
+    </section>
+    <section id="policy-detail" class="view">
+      <button class="back" data-view="policies">← 返回规则中心</button><div class="page-head"><div><p class="eyebrow">POLICY DETAIL</p><h1 id="policy-detail-title">规则详情</h1><p id="policy-detail-copy">—</p></div><button class="secondary" data-drawer>查看版本证据</button></div><div id="policy-meta" class="meta-row"></div>
+      <article class="panel policy-usage"><div class="section-head"><div><h2>引用统计</h2><p>使用与运行监控一致的时间范围</p></div></div><div class="timebar"><strong>统计范围</strong><button data-policy-hours="1">过去 1 小时</button><button data-policy-hours="24">过去 24 小时</button><button data-policy-hours="72">过去 3 天</button><button class="active" data-policy-hours="168">过去 7 天</button><button id="policy-custom-toggle">自定义时间</button><span id="policy-custom-fields" hidden style="display:none"><input id="policy-from-time" type="datetime-local"><input id="policy-to-time" type="datetime-local"><button id="policy-apply-time">应用</button></span><small id="policy-range-label">过去 7 天</small></div><div id="policy-usage-stats" class="stats"></div></article>
+      <div class="policy-layout"><article class="panel"><h2>规则用途与判定逻辑</h2><div id="policy-logic"></div><div id="policy-selected-change"></div></article><article class="panel"><h2>版本状态</h2><p class="sub">选择版本可查看其判定逻辑和结构化变更</p><div id="policy-versions"></div></article></div><article class="panel recent"><h2>近期关联案件</h2><div id="policy-cases"></div></article>
+    </section>
+    <section id="approvals" class="view">
+      <div class="page-head"><div><p class="eyebrow">HUMAN GOVERNANCE</p><h1>人工审批</h1><p>分别核对规则变更与历史案件回放影响。批准仅记录比赛审批，不发布规则。</p></div><span id="approval-count" class="badge amber">—</span></div><div class="review-layout"><aside class="panel approval-queue"><h2>待处理案件</h2><div id="approval-list" class="approval-list"></div></aside><section id="approval-detail" class="panel approval-detail"><div class="empty">选择一条待审批记录</div></section></div>
+    </section>
+    <section id="replay-detail" class="view">
+      <button class="back" data-view="approvals">← 返回人工审批</button><div class="page-head"><div><p class="eyebrow">REPLAY DETAIL</p><h1>回放详情</h1><p id="replay-range">—</p></div><div class="actions"><button id="replay-policy-link" class="secondary">查看规则详情</button><button id="replay-evidence" class="secondary">查看回放证据</button></div></div><div id="replay-meta" class="meta-row"></div><div id="replay-summary" class="stats five replay-stats"></div>
+      <div class="toolbar"><input id="replay-q" placeholder="检索回放样本编号、事实或结果"><select id="replay-impact"><option value="">全部影响</option><option value="UNAFFECTED">不受影响</option><option value="LIGHTER">判轻</option><option value="HEAVIER">判重</option></select><button id="replay-search">查询</button><button id="replay-clear" class="secondary">清除筛选</button></div>
+      <div class="panel table-wrap"><table><thead><tr><th>回放案件</th><th>关键事实</th><th>旧规则结果</th><th>新规则结果</th><th>影响方向</th></tr></thead><tbody id="replay-rows"></tbody></table><div id="replay-pagination" class="pagination"></div></div>
+    </section>
+  </main>
+  <div id="drawer-backdrop" class="drawer-backdrop" aria-hidden="true"><aside class="drawer"><div class="drawer-head"><div><p class="eyebrow">EVIDENCE DRAWER</p><h2>技术证据</h2></div><button id="drawer-close" aria-label="关闭">×</button></div><p>WorkOrder、Artifact、run_id、trace_id 与哈希只在此处展示。</p><div id="drawer-content"></div></aside></div>
+  <div id="toast" class="toast" role="status"></div>
+  <!-- 验收术语：调查证据、风险意见、反证意见、独立裁决、原裁决快照、申诉新增证据、申诉结果、规则问题归因、非规则反例、候选规则 Diff、确定性回放、Human 审批结果、WorkOrder、run_id、trace_id、候选规则未发布、未开始、运行中、成功、执行失败、业务无数据 -->
+  <script src="/app.js" defer></script>
+</body>
+</html>
