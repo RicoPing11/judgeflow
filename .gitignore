@@ -19,6 +19,7 @@ htmlcov/
 **/.DS_Store
 .obsidian/
 .ppt-build/
+/.codex-ppt-*/
 ~$*
 
 # Unrelated local project kept beside JudgeFlow
